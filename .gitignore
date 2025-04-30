@@ -1,0 +1,9 @@
+/backend/Vectorstores
+
+/backend/__pycache__
+
+/frontend/node_modules
+
+/backend/config.py
+
+/backend/config.env
