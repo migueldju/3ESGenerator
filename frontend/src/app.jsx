@@ -7,8 +7,8 @@ import RegisterPage from './components/RegisterPage';
 import ForgotPasswordPage from './components/ForgotPasswordPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
 import VerifyEmailPage from './components/VerifyEmailPage';
+import UserProfilePage from './components/UserProfilePage'; // Agregar esta línea
 import './styles/app.css';
-
 
 // Fallback component for loading state
 const LoadingFallback = () => (
@@ -35,6 +35,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+        <Route path="/profile" element={<UserProfilePage />} /> {/* Agregar esta línea */}
       </Routes>
     </Suspense>
   );

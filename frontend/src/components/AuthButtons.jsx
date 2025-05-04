@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 import '../styles/AuthButtons.css';
@@ -9,30 +9,34 @@ const AuthButtons = () => {
   const [username, setUsername] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const checkLoginStatus = async () => {
+    try {
+      const response = await fetch('/api/check-auth', {
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setIsLoggedIn(data.isAuthenticated);
+        if (data.isAuthenticated) {
+          setUsername(data.username);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking authentication status:', error);
+    }
+  };
 
   useEffect(() => {
-    // Check if user is logged in
-    const checkLoginStatus = async () => {
-      try {
-        const response = await fetch('/api/check-auth', {
-          method: 'GET',
-          credentials: 'include'
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setIsLoggedIn(data.isAuthenticated);
-          if (data.isAuthenticated) {
-            setUsername(data.username);
-          }
-        }
-      } catch (error) {
-        console.error('Error checking authentication status:', error);
-      }
-    };
-    
     checkLoginStatus();
   }, []);
+
+  useEffect(() => {
+    checkLoginStatus();
+  }, [location]);
 
   const handleLogout = async () => {
     try {
@@ -42,10 +46,18 @@ const AuthButtons = () => {
       });
       
       if (response.ok) {
+        // En lugar de solo navegar, recargar la página completamente
         setIsLoggedIn(false);
         setUsername('');
         setDropdownOpen(false);
+        
+        // Navegar primero a la página principal
         navigate('/');
+        
+        // Luego recargar la página para limpiar todo el estado
+        setTimeout(() => {
+          window.location.reload();
+        }, 100); // Pequeño retraso para asegurar que la navegación ocurra primero
       }
     } catch (error) {
       console.error('Error logging out:', error);

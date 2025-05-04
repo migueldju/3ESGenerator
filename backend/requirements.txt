@@ -1,5 +1,6 @@
 flask
 flask-cors
+Flask-Session
 flask-limiter
 flask-login
 flask_mail_sendgrid

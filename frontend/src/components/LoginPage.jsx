@@ -118,7 +118,7 @@ const LoginPage = () => {
         navigate('/');
       } catch (parseError) {
         console.error("Error parsing response:", parseError);
-        throw new Error('Error processing server response. Please try again.');
+        throw new Error('Invalid credentials. Please try again.');
       }
     } catch (error) {
       console.error("Login error:", error);

@@ -375,8 +375,7 @@ def login():
         # Log in user
         login_user(user)
         
-        session.clear()
-        session.permanent = True
+        session.regenerate()
         
         app.logger.info(f"User logged in: {user.username}")
         return jsonify({
@@ -399,6 +398,46 @@ def logout():
     session.clear()
     app.logger.info(f"User logged out: {username}")
     return jsonify({'message': 'Logout successful'}), 200
+
+@app.route('/user/delete-account', methods=['POST'])
+@login_required
+def delete_account():
+    try:
+        user_id = current_user.id
+        username = current_user.username
+        
+        # Desconectar al usuario primero
+        logout_user()
+        
+        # Eliminar todos los datos relacionados con el usuario
+        conversations = Conversation.query.filter_by(user_id=user_id).all()
+        for conversation in conversations:
+            # Eliminar respuestas asociadas
+            Answer.query.filter_by(conversation_id=conversation.id).delete()
+        
+        # Eliminar conversaciones
+        Conversation.query.filter_by(user_id=user_id).delete()
+        
+        # Eliminar documentos
+        Document.query.filter_by(user_id=user_id).delete()
+        
+        # Finalmente eliminar al usuario
+        user = User.query.get(user_id)
+        db.session.delete(user)
+        db.session.commit()
+        
+        # Limpiar la sesión
+        session.clear()
+        
+        app.logger.info(f"User deleted successfully: {username}")
+        return jsonify({'message': 'Account deleted successfully'}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error deleting user account: {str(e)}")
+        return jsonify({'message': 'Error deleting account. Please try again.'}), 500
+    
+
 
 @app.route('/check-auth', methods=['GET'])
 def check_auth():
@@ -500,14 +539,27 @@ def update_user_profile():
         app.logger.warning("CSRF token validation failed in profile update")
         return jsonify({'message': 'Invalid request'}), 403
     
+    username_changed = False
+
     if data.get('username') and data['username'] != current_user.username:
-        # Check if username is already taken
-        if User.query.filter_by(username=data['username']).first():
+        existing_user = User.query.filter_by(username=data['username']).first()
+        if existing_user:
             return jsonify({'message': 'Username already taken'}), 400
+            
+        # Validar longitud de username
+        if len(data['username']) < 3:
+            return jsonify({'message': 'Username must be at least 3 characters'}), 400
+            
+        current_user.username = data['username']
+        username_changed = True
+    
+    if data.get('username') and data['username'] != current_user.username:
+
+        if User.query.filter_by(username=data['username']).first():
+            return jsonfy({'message': 'Username already taken'}), 400
         current_user.username = data['username']
     
     if data.get('password'):
-        # Password strength check
         if len(data['password']) < 8:
             return jsonify({'message': 'Password must be at least 8 characters long'}), 400
         
