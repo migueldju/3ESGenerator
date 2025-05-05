@@ -14,12 +14,24 @@ const UserProfilePage = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
+  const [csrfToken, setCsrfToken] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch user data
-    const fetchUserData = async () => {
+    const fetchData = async () => {
       try {
+        // Get CSRF token
+        const csrfResponse = await fetch('/api/get-csrf-token', {
+          method: 'GET',
+          credentials: 'include'
+        });
+        
+        if (csrfResponse.ok) {
+          const csrfData = await csrfResponse.json();
+          setCsrfToken(csrfData.csrf_token);
+        }
+
+        // Fetch user data
         const response = await fetch('/api/user/profile', {
           method: 'GET',
           credentials: 'include'
@@ -33,14 +45,14 @@ const UserProfilePage = () => {
           navigate('/login');
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error('Error fetching data:', error);
         setErrorMessage('Error loading profile data');
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchUserData();
+    fetchData();
   }, [navigate]);
 
   const handleUsernameChange = (e) => {
@@ -70,9 +82,6 @@ const UserProfilePage = () => {
     setSuccessMessage('');
 
     try {
-      // Get CSRF token if needed
-      const csrfToken = sessionStorage.getItem('csrf_token') || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-
       const response = await fetch('/api/user/update-profile', {
         method: 'POST',
         headers: {

@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ReactMarkdown from 'react-markdown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPaperPlane, faRedo } from '@fortawesome/free-solid-svg-icons';
 import Header from './Header';
@@ -29,7 +28,6 @@ const ChatView = () => {
 
   const [placeholderText, setPlaceholder] = useState("Enter your company description...");
   const [companyDesc, setCompanyDesc] = useState('');
-  const [conversationHistory, setConversationHistory] = useState([]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -53,32 +51,62 @@ const ChatView = () => {
     }
   }, [inputValue]);
 
-  // Check for existing session on component mount
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const response = await fetch('/api/check_session', {
-          method: 'GET',
-          credentials: 'include'
-        });
+  // Fetch conversation from server
+  const fetchConversation = async () => {
+    try {
+      console.log('Fetching conversation from server...');
+      const response = await fetch('/api/chat/get_conversation', {
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Server conversation data:', data);
         
-        if (response.ok) {
-          const data = await response.json();
-          if (data.initialized) {
-            setCompanyInfo({
-              initialized: true,
-              naceSector: data.nace_sector,
-              esrsSector: data.esrs_sector
-            });
-            setPlaceholder("Ask your question here...");
+        if (data.initialized) {
+          setCompanyInfo({
+            initialized: true,
+            naceSector: data.nace_sector,
+            esrsSector: data.esrs_sector
+          });
+          setPlaceholder("Ask your question here...");
+          setCompanyDesc(data.company_desc);
+          
+          // Restore messages if we have them
+          if (data.messages && data.messages.length > 0) {
+            setMessages(data.messages);
           }
         }
-      } catch (error) {
-        console.error('Error checking session:', error);
+      } else {
+        console.error('Failed to fetch conversation:', response.status);
       }
-    };
-    
-    checkSession();
+    } catch (error) {
+      console.error('Error fetching conversation:', error);
+    }
+  };
+
+  // Debug function to check conversation state
+  const debugConversation = async () => {
+    try {
+      const response = await fetch('/api/chat/debug/conversation', {
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Debug conversation data:', data);
+      }
+    } catch (error) {
+      console.error('Error debugging conversation:', error);
+    }
+  };
+
+  // Check for existing session on component mount
+  useEffect(() => {
+    fetchConversation();
+    debugConversation(); // For debugging purposes
   }, []);
 
   const handleInputChange = (e) => {
@@ -95,7 +123,8 @@ const ChatView = () => {
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
   
-    setMessages(prev => [...prev, { type: 'user', content: inputValue }]);
+    const currentMessages = [...messages, { type: 'user', content: inputValue }];
+    setMessages(currentMessages);
     
     const currentInput = inputValue;
     setInputValue('');
@@ -138,6 +167,7 @@ const ChatView = () => {
 
   const handleReset = async () => {
     try {
+      console.log('Resetting conversation...');
       const response = await fetch('/api/reset', {
         method: 'POST',
         credentials: 'include'
@@ -159,6 +189,7 @@ const ChatView = () => {
           esrsSector: 'Not determined yet'
         });
         setPlaceholder("Enter your company description...");
+        setCompanyDesc('');
       }
     } catch (error) {
       console.error('Error resetting chat:', error);

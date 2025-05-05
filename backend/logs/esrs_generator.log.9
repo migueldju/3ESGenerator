@@ -1,173 +1,52 @@
-2025-04-30 12:23:28,072 ERROR: Exception on /forgot-password [POST] [in C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py:875]
-Traceback (most recent call last):
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 146, in __init__
-    self._dbapi_connection = engine.raw_connection()
-                             ~~~~~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 3302, in raw_connection
-    return self.pool.connect()
-           ~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 449, in connect
-    return _ConnectionFairy._checkout(self)
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 1263, in _checkout
-    fairy = _ConnectionRecord.checkout(pool)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
-    rec = pool._do_get()
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\impl.py", line 179, in _do_get
-    with util.safe_reraise():
-         ~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 146, in __exit__
-    raise exc_value.with_traceback(exc_tb)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
-    return self._create_connection()
-           ~~~~~~~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 390, in _create_connection
-    return _ConnectionRecord(self)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
-    self.__connect()
-    ~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
-    with util.safe_reraise():
-         ~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 146, in __exit__
-    raise exc_value.with_traceback(exc_tb)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
-    self.dbapi_connection = connection = pool._invoke_creator(self)
-                                         ~~~~~~~~~~~~~~~~~~~~^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\create.py", line 643, in connect
-    return dialect.connect(*cargs, **cparams)
-           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py", line 621, in connect
-    return self.loaded_dbapi.connect(*cargs, **cparams)
-           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 361, in __init__
-    self.connect()
-    ~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 669, in connect
-    self._request_authentication()
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 971, in _request_authentication
-    auth_packet = self._process_auth(plugin_name, auth_packet)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 1056, in _process_auth
-    raise err.OperationalError(
-    ...<2 lines>...
-    )
-pymysql.err.OperationalError: (2059, "Authentication plugin 'b'auth_gssapi_client'' not configured")
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
-    response = self.full_dispatch_request()
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
-    rv = self.handle_user_exception(e)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask_cors\extension.py", line 176, in wrapped_function
-    return cors_after_request(app.make_response(f(*args, **kwargs)))
-                                                ~^^^^^^^^^^^^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
-  File "C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py", line 422, in forgot_password
-    user = User.query.filter_by(email=data['email']).first()
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\query.py", line 2728, in first
-    return self.limit(1)._iter().first()  # type: ignore
-           ~~~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\query.py", line 2827, in _iter
-    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
-                                                  ~~~~~~~~~~~~~~~~~~~~^
-        statement,
-        ^^^^^^^^^^
-        params,
-        ^^^^^^^
-        execution_options={"_sa_orm_load_options": self.load_options},
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 2362, in execute
-    return self._execute_internal(
-           ~~~~~~~~~~~~~~~~~~~~~~^
-        statement,
-        ^^^^^^^^^^
-    ...<4 lines>...
-        _add_event=_add_event,
-        ^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 2237, in _execute_internal
-    conn = self._connection_for_bind(bind)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 2106, in _connection_for_bind
-    return trans._connection_for_bind(engine, execution_options)
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<string>", line 2, in _connection_for_bind
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\state_changes.py", line 139, in _go
-    ret_value = fn(self, *arg, **kw)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 1189, in _connection_for_bind
-    conn = bind.connect()
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 3278, in connect
-    return self._connection_cls(self)
-           ~~~~~~~~~~~~~~~~~~~~^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 148, in __init__
-    Connection._handle_dbapi_exception_noconnection(
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
-        err, dialect, engine
-        ^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 2442, in _handle_dbapi_exception_noconnection
-    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 146, in __init__
-    self._dbapi_connection = engine.raw_connection()
-                             ~~~~~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 3302, in raw_connection
-    return self.pool.connect()
-           ~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 449, in connect
-    return _ConnectionFairy._checkout(self)
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 1263, in _checkout
-    fairy = _ConnectionRecord.checkout(pool)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
-    rec = pool._do_get()
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\impl.py", line 179, in _do_get
-    with util.safe_reraise():
-         ~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 146, in __exit__
-    raise exc_value.with_traceback(exc_tb)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
-    return self._create_connection()
-           ~~~~~~~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 390, in _create_connection
-    return _ConnectionRecord(self)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
-    self.__connect()
-    ~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
-    with util.safe_reraise():
-         ~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 146, in __exit__
-    raise exc_value.with_traceback(exc_tb)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
-    self.dbapi_connection = connection = pool._invoke_creator(self)
-                                         ~~~~~~~~~~~~~~~~~~~~^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\create.py", line 643, in connect
-    return dialect.connect(*cargs, **cparams)
-           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py", line 621, in connect
-    return self.loaded_dbapi.connect(*cargs, **cparams)
-           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 361, in __init__
-    self.connect()
-    ~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 669, in connect
-    self._request_authentication()
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 971, in _request_authentication
-    auth_packet = self._process_auth(plugin_name, auth_packet)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 1056, in _process_auth
-    raise err.OperationalError(
-    ...<2 lines>...
-    )
-sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (2059, "Authentication plugin 'b'auth_gssapi_client'' not configured")
-(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-05-05 14:35:38,617 INFO: Session keys: ['_fresh', '_id', '_user_id', 'company_desc', 'conversation_history', 'esrs_sector', 'initialized', 'nace_sector'] [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:208]
+2025-05-05 14:35:38,688 INFO: User authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:209]
+2025-05-05 14:35:46,491 WARNING: Not saving answer - user not authenticated or no conversation_id [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:278]
+2025-05-05 14:35:54,980 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:286]
+2025-05-05 14:35:54,985 INFO: Session keys: ['_fresh', '_id', '_user_id', 'company_desc', 'conversation_history', 'csrf_token', 'esrs_sector', 'initialized', 'nace_sector'] [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:287]
+2025-05-05 14:35:54,991 INFO: User authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:288]
+2025-05-05 14:35:54,992 INFO: Checking for conversation_id: None [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:301]
+2025-05-05 14:35:54,994 INFO: conversation_id: None, authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:319]
+2025-05-05 14:35:55,016 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:286]
+2025-05-05 14:35:55,021 INFO: Session keys: ['_fresh', '_id', '_user_id', 'company_desc', 'conversation_history', 'csrf_token', 'esrs_sector', 'initialized', 'nace_sector'] [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:287]
+2025-05-05 14:35:55,025 INFO: User authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:288]
+2025-05-05 14:35:55,030 INFO: Checking for conversation_id: None [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:301]
+2025-05-05 14:35:55,031 INFO: conversation_id: None, authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:319]
+2025-05-05 14:36:17,589 INFO: Chat message received. Session initialized: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-05 14:36:17,590 INFO: Session keys: ['_fresh', '_id', '_user_id', 'company_desc', 'conversation_history', 'csrf_token', 'esrs_sector', 'initialized', 'nace_sector'] [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:208]
+2025-05-05 14:36:17,593 INFO: User authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:209]
+2025-05-05 14:36:24,968 WARNING: Not saving answer - user not authenticated or no conversation_id [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:278]
+2025-05-05 14:36:40,467 INFO: Chat message received. Session initialized: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-05 14:36:40,467 INFO: Session keys: ['_fresh', '_id', '_user_id', 'company_desc', 'conversation_history', 'csrf_token', 'esrs_sector', 'initialized', 'nace_sector'] [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:208]
+2025-05-05 14:36:40,473 INFO: User authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:209]
+2025-05-05 14:36:54,058 WARNING: Not saving answer - user not authenticated or no conversation_id [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:278]
+2025-05-05 14:37:22,277 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:286]
+2025-05-05 14:37:22,280 INFO: Session keys: ['_fresh', '_id', '_user_id', 'company_desc', 'conversation_history', 'csrf_token', 'esrs_sector', 'initialized', 'nace_sector'] [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:287]
+2025-05-05 14:37:22,284 INFO: User authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:288]
+2025-05-05 14:37:22,286 INFO: Checking for conversation_id: None [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:301]
+2025-05-05 14:37:22,287 INFO: conversation_id: None, authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:319]
+2025-05-05 14:37:22,306 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:286]
+2025-05-05 14:37:22,310 INFO: Session keys: ['_fresh', '_id', '_user_id', 'company_desc', 'conversation_history', 'csrf_token', 'esrs_sector', 'initialized', 'nace_sector'] [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:287]
+2025-05-05 14:37:22,315 INFO: User authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:288]
+2025-05-05 14:37:22,319 INFO: Checking for conversation_id: None [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:301]
+2025-05-05 14:37:22,321 INFO: conversation_id: None, authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:319]
+2025-05-05 14:47:21,390 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:286]
+2025-05-05 14:47:21,390 INFO: Session keys: ['_fresh', '_id', '_user_id', 'company_desc', 'conversation_history', 'csrf_token', 'esrs_sector', 'initialized', 'nace_sector'] [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:287]
+2025-05-05 14:47:21,397 INFO: User authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:288]
+2025-05-05 14:47:21,398 INFO: Checking for conversation_id: None [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:301]
+2025-05-05 14:47:21,399 INFO: conversation_id: None, authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:319]
+2025-05-05 14:47:34,376 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:286]
+2025-05-05 14:47:34,379 INFO: Session keys: ['_fresh', '_id', '_user_id', 'company_desc', 'conversation_history', 'csrf_token', 'esrs_sector', 'initialized', 'nace_sector'] [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:287]
+2025-05-05 14:47:34,383 INFO: User authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:288]
+2025-05-05 14:47:34,384 INFO: Checking for conversation_id: None [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:301]
+2025-05-05 14:47:34,386 INFO: conversation_id: None, authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:319]
+2025-05-05 14:47:38,392 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:286]
+2025-05-05 14:47:38,395 INFO: Session keys: ['_fresh', '_id', '_user_id', 'company_desc', 'conversation_history', 'csrf_token', 'esrs_sector', 'initialized', 'nace_sector'] [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:287]
+2025-05-05 14:47:38,400 INFO: User authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:288]
+2025-05-05 14:47:38,402 INFO: Checking for conversation_id: None [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:301]
+2025-05-05 14:47:38,404 INFO: conversation_id: None, authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:319]
+2025-05-05 14:47:42,379 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:286]
+2025-05-05 14:47:42,380 INFO: Session keys: ['_fresh', '_id', '_user_id', 'company_desc', 'conversation_history', 'csrf_token', 'esrs_sector', 'initialized', 'nace_sector'] [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:287]
+2025-05-05 14:47:42,387 INFO: User authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:288]
+2025-05-05 14:47:42,388 INFO: Checking for conversation_id: None [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:301]
+2025-05-05 14:47:42,390 INFO: conversation_id: None, authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:319]
+2025-05-05 14:48:11,126 INFO: ESGenerator startup [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:41]

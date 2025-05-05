@@ -1,108 +1,62 @@
-2025-04-30 12:19:42,428 ERROR: Exception on /forgot-password [POST] [in C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py:875]
-Traceback (most recent call last):
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
-    response = self.full_dispatch_request()
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
-    rv = self.handle_user_exception(e)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask_cors\extension.py", line 176, in wrapped_function
-    return cors_after_request(app.make_response(f(*args, **kwargs)))
-                                                ~^^^^^^^^^^^^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
-  File "C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py", line 422, in forgot_password
-    user = User.query.filter_by(email=data['email']).first()
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\query.py", line 2728, in first
-    return self.limit(1)._iter().first()  # type: ignore
-           ~~~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\query.py", line 2827, in _iter
-    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
-                                                  ~~~~~~~~~~~~~~~~~~~~^
-        statement,
-        ^^^^^^^^^^
-        params,
-        ^^^^^^^
-        execution_options={"_sa_orm_load_options": self.load_options},
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 2362, in execute
-    return self._execute_internal(
-           ~~~~~~~~~~~~~~~~~~~~~~^
-        statement,
-        ^^^^^^^^^^
-    ...<4 lines>...
-        _add_event=_add_event,
-        ^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 2237, in _execute_internal
-    conn = self._connection_for_bind(bind)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 2106, in _connection_for_bind
-    return trans._connection_for_bind(engine, execution_options)
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<string>", line 2, in _connection_for_bind
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\state_changes.py", line 139, in _go
-    ret_value = fn(self, *arg, **kw)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 1189, in _connection_for_bind
-    conn = bind.connect()
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 3278, in connect
-    return self._connection_cls(self)
-           ~~~~~~~~~~~~~~~~~~~~^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 146, in __init__
-    self._dbapi_connection = engine.raw_connection()
-                             ~~~~~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 3302, in raw_connection
-    return self.pool.connect()
-           ~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 449, in connect
-    return _ConnectionFairy._checkout(self)
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 1263, in _checkout
-    fairy = _ConnectionRecord.checkout(pool)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
-    rec = pool._do_get()
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\impl.py", line 179, in _do_get
-    with util.safe_reraise():
-         ~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 146, in __exit__
-    raise exc_value.with_traceback(exc_tb)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
-    return self._create_connection()
-           ~~~~~~~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 390, in _create_connection
-    return _ConnectionRecord(self)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
-    self.__connect()
-    ~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
-    with util.safe_reraise():
-         ~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 146, in __exit__
-    raise exc_value.with_traceback(exc_tb)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
-    self.dbapi_connection = connection = pool._invoke_creator(self)
-                                         ~~~~~~~~~~~~~~~~~~~~^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\create.py", line 643, in connect
-    return dialect.connect(*cargs, **cparams)
-           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py", line 621, in connect
-    return self.loaded_dbapi.connect(*cargs, **cparams)
-           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 361, in __init__
-    self.connect()
-    ~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 669, in connect
-    self._request_authentication()
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 971, in _request_authentication
-    auth_packet = self._process_auth(plugin_name, auth_packet)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 991, in _process_auth
-    handler = self._get_auth_plugin_handler(plugin_name)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\pymysql\connections.py", line 1067, in _get_auth_plugin_handler
-    plugin_class = self._auth_plugin_map.get(plugin_name)
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^
-AttributeError: 'str' object has no attribute 'get'
-2025-04-30 12:23:21,569 INFO: ESGenerator startup [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:40]
+2025-05-04 23:12:58,491 WARNING: CSRF token validation failed in profile update [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:542]
+2025-05-05 00:31:40,940 ERROR: Error deleting user account: Can't call Query.update() or Query.delete() when join(), outerjoin(), select_from(), or from_self() has been called [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:440]
+2025-05-05 00:35:12,553 ERROR: Error deleting user account: Can't call Query.update() or Query.delete() when join(), outerjoin(), select_from(), or from_self() has been called [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:440]
+2025-05-05 00:35:29,032 INFO: ESGenerator startup [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:41]
+2025-05-05 00:35:34,247 INFO: User deleted successfully: DEJUAMIG2 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:432]
+2025-05-05 00:36:17,519 ERROR: Login error: 'SecureCookieSession' object has no attribute 'regenerate' [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:390]
+2025-05-05 00:36:23,296 WARNING: CSRF token validation failed in profile update [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:539]
+2025-05-05 01:31:55,994 WARNING: Invalid email verification attempt with token: 7c3a926b-4396-4020-8f3f-d19d22151859 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:346]
+2025-05-05 01:31:56,005 WARNING: Invalid email verification attempt with token: 7c3a926b-4396-4020-8f3f-d19d22151859 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:346]
+2025-05-05 01:38:45,261 WARNING: Invalid email verification attempt with token: 7c3a926b-4396-4020-8f3f-d19d22151859 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:346]
+2025-05-05 01:38:53,797 INFO: User logged out: mdu1001 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:399]
+2025-05-05 01:39:11,114 INFO: Registration attempt with existing email: mdu1001@alu.ubu.es [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:304]
+2025-05-05 01:39:19,371 INFO: New user registered: dddd [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:335]
+2025-05-05 01:39:31,458 INFO: Email verified for user: dddd [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:353]
+2025-05-05 01:39:31,473 WARNING: Invalid email verification attempt with token: 8ac7bbb1-0153-4589-8abf-fb9474f2b4d1 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:346]
+2025-05-05 01:40:09,478 INFO: ESGenerator startup [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:41]
+2025-05-05 01:43:01,963 INFO: ESGenerator startup [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:41]
+2025-05-05 01:45:05,251 INFO: ESGenerator startup [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:41]
+2025-05-05 01:45:11,037 ERROR: Login error: 'SecureCookieSession' object has no attribute 'regenerate' [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:393]
+2025-05-05 01:45:18,020 INFO: Profile updated for user: ddddd [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:578]
+2025-05-05 01:45:29,194 INFO: Profile updated for user: DEJUAMIG2 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:578]
+2025-05-05 01:45:38,497 INFO: User deleted successfully: DEJUAMIG2 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:435]
+2025-05-05 01:45:54,630 INFO: New user registered: DEJUAMIG5 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:335]
+2025-05-05 01:46:04,473 INFO: Email verified for user: DEJUAMIG5 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:354]
+2025-05-05 01:47:22,457 ERROR: Login error: 'SecureCookieSession' object has no attribute 'regenerate' [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:393]
+2025-05-05 01:47:26,705 INFO: User deleted successfully: DEJUAMIG5 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:435]
+2025-05-05 01:47:40,726 INFO: New user registered: DEJUAMIG23 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:335]
+2025-05-05 01:48:54,073 INFO: ESGenerator startup [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:41]
+2025-05-05 01:49:36,421 INFO: Password reset link sent to: kshmrkirilak@gmail.com [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:498]
+2025-05-05 01:49:46,519 INFO: Email verified for user: DEJUAMIG23 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:363]
+2025-05-05 01:49:46,534 INFO: Token already used for verified user: e2469732... [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:352]
+2025-05-05 01:50:00,974 ERROR: Login error: 'SecureCookieSession' object has no attribute 'regenerate' [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:410]
+2025-05-05 01:50:07,295 INFO: User deleted successfully: DEJUAMIG23 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:452]
+2025-05-05 01:50:24,909 INFO: New user registered: DEJUAMIG44 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:335]
+2025-05-05 01:50:34,363 INFO: Email verified for user: DEJUAMIG44 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:363]
+2025-05-05 01:50:34,375 INFO: Token already used for verified user: 02e39100... [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:352]
+2025-05-05 13:38:53,819 INFO: Token already used for verified user: 02e39100... [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:352]
+2025-05-05 13:38:59,906 INFO: Token already used for verified user: 02e39100... [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:352]
+2025-05-05 13:40:00,862 ERROR: Login error: 'SecureCookieSession' object has no attribute 'regenerate' [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:410]
+2025-05-05 13:40:05,927 INFO: Profile updated for user: DEJUAMIG34 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:595]
+2025-05-05 13:40:27,064 INFO: Chat message received. Session initialized: False [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-05 13:40:29,033 ERROR: Error getting LLM response: Connection error. [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:126]
+2025-05-05 13:40:37,104 INFO: Chat message received. Session initialized: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-05 13:40:39,283 ERROR: Error getting LLM response: Connection error. [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:126]
+2025-05-05 13:42:18,194 ERROR: Login error: 'SecureCookieSession' object has no attribute 'regenerate' [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:410]
+2025-05-05 13:42:33,514 INFO: Chat message received. Session initialized: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-05 13:42:54,455 INFO: Chat message received. Session initialized: False [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-05 13:43:01,163 INFO: Chat message received. Session initialized: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-05 13:44:28,332 INFO: Token already used for verified user: 02e39100... [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:352]
+2025-05-05 13:44:28,359 INFO: Token already used for verified user: 02e39100... [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:352]
+2025-05-05 13:44:40,091 ERROR: Login error: 'SecureCookieSession' object has no attribute 'regenerate' [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:410]
+2025-05-05 14:07:26,892 INFO: ESGenerator startup [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:41]
+2025-05-05 14:18:28,080 INFO: ESGenerator startup [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:41]
+2025-05-05 14:18:51,396 INFO: Chat message received. Session initialized: False [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-05 14:18:55,572 INFO: Chat message received. Session initialized: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-05 14:19:19,775 INFO: Chat message received. Session initialized: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-05 14:19:43,992 INFO: Chat message received. Session initialized: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-05 14:20:02,965 INFO: Chat message received. Session initialized: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-05 14:20:47,238 ERROR: Login error: 'SecureCookieSession' object has no attribute 'regenerate' [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:465]
+2025-05-05 14:20:51,017 INFO: Chat message received. Session initialized: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-05 14:35:28,891 INFO: ESGenerator startup [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:41]
+2025-05-05 14:35:38,617 INFO: Chat message received. Session initialized: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]

@@ -204,7 +204,7 @@ def serve(path):
 @limiter.limit("30 per minute")
 def chat():
     user_message = request.form['message']
-    app.logger.info(f"Chat message received. Session initialized: {'initialized' in session}")
+    app.logger.info(f"Chat message received. Session data: {dict(session)}")
     
     if 'initialized' not in session:
         company_desc = user_message
@@ -215,23 +215,36 @@ def chat():
         session['nace_sector'] = result['nace_sector']
         session['esrs_sector'] = result['esrs_sector']
         session['conversation_history'] = [
-            f"Company description: {company_desc}",
-            f"ESRS standards to follow: {'Agnostic Standards' if result['esrs_sector'] == 'Agnostic' else f'Agnostic Standards + {result['esrs_sector']}'}"
+            f"Q: {company_desc}",
+            f"A: Thank you for your company description. Based on my analysis, your company falls under NACE sector {result['nace_sector']}. How can I help you with your ESRS reporting requirements?"
         ]
         
         session.modified = True
         
-        if current_user.is_authenticated:
-            conversation = Conversation(
-                user_id=current_user.id,
-                nace_sector=result['nace_sector'],
-                title="Conversation " + datetime.now().strftime("%Y-%m-%d %H:%M"),
-                esrs_sector=result['esrs_sector'],
-                company_description=company_desc
-            )
-            db.session.add(conversation)
-            db.session.commit()
-            session['conversation_id'] = conversation.id
+        # ALWAYS create a conversation, even for anonymous users
+        conversation = Conversation(
+            user_id=current_user.id if current_user.is_authenticated else None,
+            nace_sector=result['nace_sector'],
+            title="Conversation " + datetime.now().strftime("%Y-%m-%d %H:%M"),
+            esrs_sector=result['esrs_sector'],
+            company_description=company_desc
+        )
+        db.session.add(conversation)
+        db.session.commit()
+        
+        # Store conversation_id in session
+        session['conversation_id'] = conversation.id
+        app.logger.info(f"Created conversation {conversation.id}, stored in session")
+        
+        # Save the first answer
+        answer = Answer(
+            conversation_id=conversation.id,
+            question=user_message,
+            answer=f"Thank you for your company description. Based on my analysis, your company falls under NACE sector {result['nace_sector']}. How can I help you with your ESRS reporting requirements?"
+        )
+        db.session.add(answer)
+        db.session.commit()
+        app.logger.info(f"Saved first answer to conversation {conversation.id}")
         
         return jsonify({
             'answer': f"Thank you for your company description. Based on my analysis, your company falls under NACE sector {result['nace_sector']}. How can I help you with your ESRS reporting requirements?",
@@ -242,8 +255,126 @@ def chat():
         })
     else:
         response = process_question(user_message)
+        response_data = response.get_json()
+        
+        # Update conversation history in session
+        conversation_history = session.get('conversation_history', [])
+        conversation_history.append(f"Q: {user_message}")
+        conversation_history.append(f"A: {response_data['answer']}")
+        session['conversation_history'] = conversation_history
         session.modified = True
+        
+        # ALWAYS save to database if conversation_id exists
+        conversation_id = session.get('conversation_id')
+        if conversation_id:
+            answer = Answer(
+                conversation_id=conversation_id,
+                question=user_message,
+                answer=response_data['answer']
+            )
+            db.session.add(answer)
+            db.session.commit()
+            app.logger.info(f"Saved answer to conversation {conversation_id}")
+        else:
+            app.logger.warning("No conversation_id in session when saving answer")
+        
         return response
+    
+@app.route('/chat/get_conversation', methods=['GET'])
+def get_conversation():
+    """Get the current conversation state"""
+    app.logger.info("Getting conversation")
+    app.logger.info(f"Session keys: {list(session.keys())}")
+    app.logger.info(f"User authenticated: {current_user.is_authenticated}")
+    
+    if 'initialized' not in session:
+        return jsonify({
+            'initialized': False,
+            'nace_sector': 'Not classified yet',
+            'esrs_sector': 'Not determined yet',
+            'messages': []
+        })
+    
+    messages = []
+    conversation_id = session.get('conversation_id')
+    
+    app.logger.info(f"Checking for conversation_id: {conversation_id}")
+    app.logger.info(f"conversation_id: {conversation_id}, authenticated: {current_user.is_authenticated}")
+    
+    # Get messages from database if we have a conversation_id
+    if conversation_id:
+        conversation = Conversation.query.filter_by(id=conversation_id).first()
+        if conversation:
+            answers = Answer.query.filter_by(conversation_id=conversation_id).order_by(Answer.created_at).all()
+            for answer in answers:
+                messages.append({'type': 'user', 'content': answer.question})
+                messages.append({'type': 'bot', 'content': answer.answer})
+            app.logger.info(f"Loaded {len(answers)} answers from DB for conversation {conversation_id}")
+        else:
+            app.logger.warning(f"Conversation {conversation_id} not found in DB")
+    else:
+        # Fallback to session history
+        conversation_history = session.get('conversation_history', [])
+        for i in range(0, len(conversation_history), 2):
+            if i < len(conversation_history) and conversation_history[i].startswith('Q: '):
+                messages.append({
+                    'type': 'user', 
+                    'content': conversation_history[i][3:]
+                })
+            if i + 1 < len(conversation_history) and conversation_history[i+1].startswith('A: '):
+                messages.append({
+                    'type': 'bot', 
+                    'content': conversation_history[i+1][3:]
+                })
+    
+    return jsonify({
+        'initialized': True,
+        'nace_sector': session.get('nace_sector', ''),
+        'esrs_sector': session.get('esrs_sector', ''),
+        'messages': messages,
+        'company_desc': session.get('company_desc', '')
+    })
+
+@app.route('/chat/debug/conversation', methods=['GET'])
+def debug_conversation():
+    """Debug endpoint to see conversation state"""
+    conversation_id = session.get('conversation_id')
+    data = {
+        'session_keys': list(session.keys()),
+        'conversation_id': conversation_id,
+        'session_conversation_history': session.get('conversation_history', []),
+        'session_initialized': session.get('initialized', False)
+    }
+    
+    if conversation_id:
+        conversation = Conversation.query.filter_by(id=conversation_id).first()
+        if conversation:
+            data['db_conversation'] = {
+                'id': conversation.id,
+                'title': conversation.title,
+                'nace_sector': conversation.nace_sector,
+                'created_at': conversation.created_at.isoformat()
+            }
+            answers = Answer.query.filter_by(conversation_id=conversation_id).all()
+            data['db_answers'] = [
+                {
+                    'id': a.id,
+                    'question': a.question[:50] + '...' if len(a.question) > 50 else a.question,
+                    'answer': a.answer[:50] + '...' if len(a.answer) > 50 else a.answer,
+                    'created_at': a.created_at.isoformat()
+                } for a in answers
+            ]
+        else:
+            data['db_conversation'] = None
+            data['db_answers'] = []
+    
+    return jsonify(data)
+
+# Make sure session configuration is correct
+app.config['SESSION_COOKIE_NAME'] = 'session'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
     
 @app.route('/check_session', methods=['GET'])
 def check_session():
@@ -277,8 +408,14 @@ def save_content():
 
 @app.route('/reset', methods=['POST'])
 def reset_session():
-    session.clear()
-    return jsonify({'status': 'success'})
+    try:
+        # Clear all session data
+        session.clear()
+        app.logger.info("Session cleared for reset")
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        app.logger.error(f"Error resetting session: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 # Authentication routes
 @app.route('/register', methods=['POST'])
@@ -338,20 +475,40 @@ def register():
         app.logger.error(f"Registration error: {str(e)}")
         return jsonify({'message': 'An error occurred. Please try again.'}), 500
 
+
 @app.route('/verify-email/<token>', methods=['GET'])
 def verify_email(token):
-    user = User.query.filter_by(verification_token=token).first()
-    
-    if not user:
-        app.logger.warning(f"Invalid email verification attempt with token: {token}")
-        return jsonify({'message': 'Invalid verification token'}), 400
-    
-    user.is_verified = True
-    user.verification_token = None
-    db.session.commit()
-    
-    app.logger.info(f"Email verified for user: {user.username}")
-    return jsonify({'message': 'Email verified successfully. You can now log in.'}), 200
+    try:
+        user = User.query.filter_by(verification_token=token).first()
+        
+        if not user:
+            # Check if the user already exists with no verification token (already verified)
+            user_by_email = User.query.filter(User.verification_token.is_(None), User.is_verified == True).first()
+            
+            if user_by_email:
+                app.logger.info(f"Token already used for verified user: {token[:8]}...")
+                return jsonify({'message': 'Email already verified. You can now log in.'}), 200
+            else:
+                app.logger.warning(f"Invalid verification token: {token[:8]}...")
+                return jsonify({'message': 'Invalid verification token'}), 400
+        
+        # If we found the user and they're not verified yet
+        if not user.is_verified:
+            user.is_verified = True
+            user.verification_token = None
+            db.session.commit()
+            app.logger.info(f"Email verified for user: {user.username}")
+            return jsonify({'message': 'Email verified successfully. You can now log in.'}), 200
+        else:
+            # User is already verified but token hasn't been cleared yet
+            user.verification_token = None
+            db.session.commit()
+            app.logger.info(f"Clearing token for already verified user: {user.username}")
+            return jsonify({'message': 'Email already verified. You can now log in.'}), 200
+            
+    except Exception as e:
+        app.logger.error(f"Error during email verification: {str(e)}")
+        return jsonify({'message': 'An error occurred during verification'}), 500
 
 @app.route('/login', methods=['POST'])
 @limiter.exempt  # Exempt from rate limiting for development
@@ -575,6 +732,12 @@ def update_user_profile():
     app.logger.info(f"Profile updated for user: {current_user.username}")
     return jsonify({'message': 'Profile updated successfully'}), 200
 
+@app.route('/get-csrf-token', methods=['GET'])
+def get_csrf_token():
+    """Provide CSRF token to the frontend"""
+    return jsonify({'csrf_token': generate_csrf_token()})
+
+
 @app.route('/user/conversations', methods=['GET'])
 @login_required
 def get_user_conversations():
@@ -763,6 +926,7 @@ def process_question(question):
     conversation_history.append(f"Q: {question}")
     conversation_history.append(f"A: {answer}")
     session['conversation_history'] = conversation_history
+    session.modified = True
     
     return jsonify({
         'answer': answer,
