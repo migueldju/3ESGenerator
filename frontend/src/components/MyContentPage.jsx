@@ -257,8 +257,8 @@ const MyContentPage = () => {
                               </div>
                             )}
                             <div className="additional-details">
-                              <span className="detail">ESRS Sector: {conversation.esrs_sector || 'Not specified'}</span>
                               <span className="detail">NACE Sector: {conversation.nace_sector || 'Not specified'}</span>
+                              <span className="detail">Company Description: {getCompanyDescription(conversation)}</span>
                             </div>
                           </div>
                         </div>
