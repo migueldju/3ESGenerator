@@ -8,7 +8,7 @@ import ForgotPasswordPage from './components/ForgotPasswordPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
 import VerifyEmailPage from './components/VerifyEmailPage';
 import UserProfilePage from './components/UserProfilePage';
-import UserConversationsPage from './components/UserConversationsPage';
+import MyContentPage from './components/MyContentPage';
 import './styles/app.css';
 
 // Fallback component for loading state
@@ -37,7 +37,7 @@ function App() {
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
         <Route path="/profile" element={<UserProfilePage />} />
-        <Route path="/my-content" element={<UserConversationsPage />} />
+        <Route path="/my-content" element={<MyContentPage />} />
       </Routes>
     </Suspense>
   );
