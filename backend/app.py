@@ -220,8 +220,12 @@ def chat():
         
         # Verificar si ya existe una conversación en esta sesión
         if not conversation_id:
+            # Check if user is authenticated before creating the conversation
+            current_user_id = current_user.id if current_user.is_authenticated else None
+            app.logger.info(f"Creating new conversation for user_id: {current_user_id}")
+            
             conversation = Conversation(
-                user_id=current_user.id if current_user.is_authenticated else None,
+                user_id=current_user_id,
                 nace_sector=result['nace_sector'],
                 title="Conversation " + datetime.now().strftime("%Y-%m-%d %H:%M"),
                 esrs_sector=result['esrs_sector'],
@@ -278,6 +282,7 @@ def chat():
             db.session.commit()
         
         return response
+
 
 @app.route('/chat/get_conversation', methods=['GET'])
 def get_conversation():
@@ -385,17 +390,22 @@ def save_content():
         return jsonify({'status': 'error', 'message': 'Invalid CSRF token'}), 403
         
     content = request.form.get('content', '')
+    name = request.form.get('name', f"ESRS Report {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     
     document = Document(
         user_id=current_user.id,
-        name=f"ESRS Report {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+        name=name,
         content=content
     )
     db.session.add(document)
     db.session.commit()
     
     app.logger.info(f"Content saved by user {current_user.id}")
-    return jsonify({'status': 'success', 'message': 'Content saved successfully'})
+    return jsonify({
+        'status': 'success', 
+        'message': 'Content saved successfully',
+        'document_id': document.id
+    })
 
 @app.route('/reset', methods=['POST'])
 def reset_session():
@@ -846,6 +856,24 @@ def get_conversation_details(conversation_id):
         'answers': answers_data
     }), 200
 
+@app.route('/user/conversation/<int:conversation_id>', methods=['DELETE'])
+@login_required
+def delete_conversation(conversation_id):
+    conversation = Conversation.query.filter_by(id=conversation_id, user_id=current_user.id).first()
+    
+    if not conversation:
+        return jsonify({'message': 'Conversation not found'}), 404
+    
+    # Delete all answers associated with this conversation
+    Answer.query.filter_by(conversation_id=conversation_id).delete()
+    
+    # Delete the conversation
+    db.session.delete(conversation)
+    db.session.commit()
+    
+    app.logger.info(f"Conversation deleted by user {current_user.id}: {conversation_id}")
+    return jsonify({'message': 'Conversation deleted successfully'}), 200
+
 @app.route('/user/documents', methods=['GET'])
 @login_required
 def get_user_documents():
@@ -875,6 +903,28 @@ def get_document_content(document_id):
         'content': document.content,
         'created_at': document.created_at.isoformat()
     }), 200
+
+@app.route('/user/document/<int:document_id>', methods=['PUT'])
+@login_required
+def update_document(document_id):
+    document = Document.query.filter_by(id=document_id, user_id=current_user.id).first()
+    
+    if not document:
+        return jsonify({'message': 'Document not found'}), 404
+    
+    data = request.json
+    
+    if 'content' in data:
+        document.content = data['content']
+    if 'name' in data:
+        document.name = data['name']
+    
+    document.updated_at = datetime.now()
+    db.session.commit()
+    
+    app.logger.info(f"Document updated by user {current_user.id}: {document_id}")
+    return jsonify({'message': 'Document updated successfully'}), 200
+
 
 @app.route('/user/document/<int:document_id>', methods=['DELETE'])
 @login_required

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPaperPlane, faRedo } from '@fortawesome/free-solid-svg-icons';
+import { faPaperPlane, faRedo, faFile, faHistory } from '@fortawesome/free-solid-svg-icons';
 import Header from './Header';
 import '../styles/chatView.css';
 
@@ -23,6 +23,7 @@ const ChatView = () => {
     naceSector: 'Not classified yet',
     esrsSector: 'Not determined yet'
   });
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const chatContainerRef = useRef(null);
   const textareaRef = useRef(null);
@@ -31,6 +32,30 @@ const ChatView = () => {
 
   const [placeholderText, setPlaceholder] = useState("Enter your company description...");
   const [companyDesc, setCompanyDesc] = useState('');
+
+  // Check login status
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const response = await fetch('/api/check-auth', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setIsLoggedIn(data.isAuthenticated);
+      }
+    } catch (error) {
+      console.error('Error checking auth status:', error);
+    }
+  };
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -156,6 +181,10 @@ const ChatView = () => {
     }
   };
 
+  const handleNavigate = (path) => {
+    navigate(path);
+  };
+
   return (
     <div className="app-container">
       <Header />
@@ -165,10 +194,18 @@ const ChatView = () => {
             <button className="nav-button active">Chat</button>
             <button 
               className="nav-button inactive" 
-              onClick={() => navigate('/editor')}
+              onClick={() => handleNavigate('/editor')}
             >
-              Editor
+              <FontAwesomeIcon icon={faFile} /> Editor
             </button>
+            {isLoggedIn && (
+              <button 
+                className="nav-button inactive" 
+                onClick={() => handleNavigate('/my-content')}
+              >
+                <FontAwesomeIcon icon={faHistory} /> My Content
+              </button>
+            )}
           </div>
           
           {companyInfo.initialized && (

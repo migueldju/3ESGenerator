@@ -1,24 +1,160 @@
-2025-05-05 14:51:33,606 ERROR: Login error: 'SecureCookieSession' object has no attribute 'regenerate' [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:541]
-2025-05-05 14:51:42,544 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:286]
-2025-05-05 14:51:42,550 INFO: Session keys: ['_fresh', '_id', '_user_id', 'company_desc', 'conversation_history', 'esrs_sector', 'initialized', 'nace_sector'] [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:287]
-2025-05-05 14:51:42,559 INFO: User authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:288]
-2025-05-05 14:51:42,561 INFO: Checking for conversation_id: None [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:301]
-2025-05-05 14:51:42,565 INFO: conversation_id: None, authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:302]
-2025-05-05 14:51:42,588 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:286]
-2025-05-05 14:51:42,590 INFO: Session keys: ['_fresh', '_id', '_user_id', 'company_desc', 'conversation_history', 'esrs_sector', 'initialized', 'nace_sector'] [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:287]
-2025-05-05 14:51:42,595 INFO: User authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:288]
-2025-05-05 14:51:42,596 INFO: Checking for conversation_id: None [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:301]
-2025-05-05 14:51:42,600 INFO: conversation_id: None, authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:302]
-2025-05-05 14:51:51,205 INFO: Chat message received. Session data: {'_fresh': True, '_id': 'b42f574a0db665008e5871b8820a048262a1cec362240e8665f84fbc2e273fd473a73f214d645c32ec6b13b298b27718c281f20567964b8fd1e2e6f4f046fb10', '_user_id': '7', 'company_desc': 'coal mining', 'conversation_history': ['Q: coal mining', 'A: Thank you for your company description. Based on my analysis, your company falls under NACE sector B5. How can I help you with your ESRS reporting requirements?'], 'esrs_sector': 'Mining, Quarrying and Coal', 'initialized': True, 'nace_sector': 'B5'} [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
-2025-05-05 14:52:00,725 WARNING: No conversation_id in session when saving answer [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:279]
-2025-05-05 14:52:02,859 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:286]
-2025-05-05 14:52:02,864 INFO: Session keys: ['_fresh', '_id', '_user_id', 'company_desc', 'conversation_history', 'esrs_sector', 'initialized', 'nace_sector'] [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:287]
-2025-05-05 14:52:02,869 INFO: User authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:288]
-2025-05-05 14:52:02,871 INFO: Checking for conversation_id: None [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:301]
-2025-05-05 14:52:02,875 INFO: conversation_id: None, authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:302]
-2025-05-05 14:52:02,897 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:286]
-2025-05-05 14:52:02,898 INFO: Session keys: ['_fresh', '_id', '_user_id', 'company_desc', 'conversation_history', 'esrs_sector', 'initialized', 'nace_sector'] [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:287]
-2025-05-05 14:52:02,902 INFO: User authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:288]
-2025-05-05 14:52:02,905 INFO: Checking for conversation_id: None [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:301]
-2025-05-05 14:52:02,911 INFO: conversation_id: None, authenticated: True [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:302]
-2025-05-05 14:52:16,522 INFO: Chat message received. Session data: {} [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-05 14:52:17,824 ERROR: Exception on /chat [POST] [in C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py:875]
+Traceback (most recent call last):
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py", line 941, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\MySQLdb\connections.py", line 280, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+MySQLdb.IntegrityError: (1048, "Column 'user_id' cannot be null")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask_cors\extension.py", line 176, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask_limiter\extension.py", line 1314, in __inner
+    return cast(R, flask.current_app.ensure_sync(obj)(*a, **k))
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py", line 233, in chat
+    db.session.commit()
+    ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\scoping.py", line 597, in commit
+    return self._proxied.commit()
+           ~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 2028, in commit
+    trans.commit(_to_root=True)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<string>", line 2, in commit
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 1313, in commit
+    self._prepare_impl()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "<string>", line 2, in _prepare_impl
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 1288, in _prepare_impl
+    self.session.flush()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 4352, in flush
+    self._flush(objects)
+    ~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 4487, in _flush
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 146, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 4448, in _flush
+    flush_context.execute()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\unitofwork.py", line 466, in execute
+    rec.execute(self)
+    ~~~~~~~~~~~^^^^^^
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.mapper,
+        ^^^^^^^^^^^^
+        uow.states_for_mapper_hierarchy(self.mapper, False, False),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        uow,
+        ^^^^
+    )
+    ^
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        base_mapper,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        insert,
+        ^^^^^^^
+    )
+    ^
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\persistence.py", line 1233, in _emit_insert_statements
+    result = connection.execute(
+        statement,
+        params,
+        execution_options=execution_options,
+    )
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1418, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\elements.py", line 515, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1640, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py", line 941, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
+    res = self._query(mogrified_query)
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
+    db.query(q)
+    ~~~~~~~~^^^
+  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\MySQLdb\connections.py", line 280, in query
+    _mysql.connection.query(self, query)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+sqlalchemy.exc.IntegrityError: (MySQLdb.IntegrityError) (1048, "Column 'user_id' cannot be null")
+[SQL: INSERT INTO conversations (user_id, nace_sector, title, esrs_sector, company_description, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s)]
+[parameters: (None, 'H49.3.2', 'Conversation 2025-05-05 14:52', 'Road Transport', 'taxi', datetime.datetime(2025, 5, 5, 12, 52, 17, 822334), datetime.datetime(2025, 5, 5, 12, 52, 17, 822343))]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-05-05 15:04:28,383 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:286]

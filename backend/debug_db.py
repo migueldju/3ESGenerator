@@ -22,7 +22,7 @@ with app.app_context():
         print(f"\nConversación ID: {conv.id}")
         print(f"  User ID: {conv.user_id} {'(NULL)' if conv.user_id is None else ''}")
         print(f"  Title: {conv.title}")
-        print(f"  NACE Sector: {conv.nace_sector}")
+        print(f"  Company description: {conv.company_description}")
         print(f"  Created: {conv.created_at}")
         
         # Verificar si el usuario existe
