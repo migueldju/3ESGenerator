@@ -1,4 +1,5 @@
-2025-05-05 14:52:17,824 ERROR: Exception on /chat [POST] [in C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py:875]
+2025-05-05 15:41:28,676 INFO: Chat message received. Session data: {} [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-05 15:41:30,003 ERROR: Exception on /chat [POST] [in C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py:875]
 Traceback (most recent call last):
   File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
     self.dialect.do_execute(
@@ -155,6 +156,5 @@ Traceback (most recent call last):
     ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
 sqlalchemy.exc.IntegrityError: (MySQLdb.IntegrityError) (1048, "Column 'user_id' cannot be null")
 [SQL: INSERT INTO conversations (user_id, nace_sector, title, esrs_sector, company_description, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s)]
-[parameters: (None, 'H49.3.2', 'Conversation 2025-05-05 14:52', 'Road Transport', 'taxi', datetime.datetime(2025, 5, 5, 12, 52, 17, 822334), datetime.datetime(2025, 5, 5, 12, 52, 17, 822343))]
+[parameters: (None, 'A3', 'Conversation 2025-05-05 15:41', 'Agnostic', 'fishing', datetime.datetime(2025, 5, 5, 13, 41, 30, 2374), datetime.datetime(2025, 5, 5, 13, 41, 30, 2381))]
 (Background on this error at: https://sqlalche.me/e/20/gkpj)
-2025-05-05 15:04:28,383 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:286]

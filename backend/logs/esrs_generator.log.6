@@ -1,160 +1,65 @@
-2025-05-05 15:06:10,466 ERROR: Exception on /chat [POST] [in C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py:875]
-Traceback (most recent call last):
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
-    self.dialect.do_execute(
-    ~~~~~~~~~~~~~~~~~~~~~~~^
-        cursor, str_statement, effective_parameters, context
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py", line 941, in do_execute
-    cursor.execute(statement, parameters)
-    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
-    res = self._query(mogrified_query)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
-    db.query(q)
-    ~~~~~~~~^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\MySQLdb\connections.py", line 280, in query
-    _mysql.connection.query(self, query)
-    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
-MySQLdb.IntegrityError: (1048, "Column 'user_id' cannot be null")
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
-    response = self.full_dispatch_request()
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
-    rv = self.handle_user_exception(e)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask_cors\extension.py", line 176, in wrapped_function
-    return cors_after_request(app.make_response(f(*args, **kwargs)))
-                                                ~^^^^^^^^^^^^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask_limiter\extension.py", line 1314, in __inner
-    return cast(R, flask.current_app.ensure_sync(obj)(*a, **k))
-                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
-  File "C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py", line 233, in chat
-    db.session.commit()
-    ~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\scoping.py", line 597, in commit
-    return self._proxied.commit()
-           ~~~~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 2028, in commit
-    trans.commit(_to_root=True)
-    ~~~~~~~~~~~~^^^^^^^^^^^^^^^
-  File "<string>", line 2, in commit
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\state_changes.py", line 139, in _go
-    ret_value = fn(self, *arg, **kw)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 1313, in commit
-    self._prepare_impl()
-    ~~~~~~~~~~~~~~~~~~^^
-  File "<string>", line 2, in _prepare_impl
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\state_changes.py", line 139, in _go
-    ret_value = fn(self, *arg, **kw)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 1288, in _prepare_impl
-    self.session.flush()
-    ~~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 4352, in flush
-    self._flush(objects)
-    ~~~~~~~~~~~^^^^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 4487, in _flush
-    with util.safe_reraise():
-         ~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 146, in __exit__
-    raise exc_value.with_traceback(exc_tb)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py", line 4448, in _flush
-    flush_context.execute()
-    ~~~~~~~~~~~~~~~~~~~~~^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\unitofwork.py", line 466, in execute
-    rec.execute(self)
-    ~~~~~~~~~~~^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\unitofwork.py", line 642, in execute
-    util.preloaded.orm_persistence.save_obj(
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
-        self.mapper,
-        ^^^^^^^^^^^^
-        uow.states_for_mapper_hierarchy(self.mapper, False, False),
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        uow,
-        ^^^^
-    )
-    ^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\persistence.py", line 93, in save_obj
-    _emit_insert_statements(
-    ~~~~~~~~~~~~~~~~~~~~~~~^
-        base_mapper,
-        ^^^^^^^^^^^^
-    ...<3 lines>...
-        insert,
-        ^^^^^^^
-    )
-    ^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\persistence.py", line 1233, in _emit_insert_statements
-    result = connection.execute(
-        statement,
-        params,
-        execution_options=execution_options,
-    )
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1418, in execute
-    return meth(
-        self,
-        distilled_parameters,
-        execution_options or NO_OPTIONS,
-    )
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\elements.py", line 515, in _execute_on_connection
-    return connection._execute_clauseelement(
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
-        self, distilled_params, execution_options
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1640, in _execute_clauseelement
-    ret = self._execute_context(
-        dialect,
-    ...<8 lines>...
-        cache_hit=cache_hit,
-    )
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
-    return self._exec_single_context(
-           ~~~~~~~~~~~~~~~~~~~~~~~~~^
-        dialect, context, statement, parameters
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
-    self._handle_dbapi_exception(
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
-        e, str_statement, effective_parameters, cursor, context
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
-    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
-    self.dialect.do_execute(
-    ~~~~~~~~~~~~~~~~~~~~~~~^
-        cursor, str_statement, effective_parameters, context
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py", line 941, in do_execute
-    cursor.execute(statement, parameters)
-    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\MySQLdb\cursors.py", line 179, in execute
-    res = self._query(mogrified_query)
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\MySQLdb\cursors.py", line 330, in _query
-    db.query(q)
-    ~~~~~~~~^^^
-  File "C:\Users\Miguel de Juan Urien\AppData\Local\Programs\Python\Python313\Lib\site-packages\MySQLdb\connections.py", line 280, in query
-    _mysql.connection.query(self, query)
-    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
-sqlalchemy.exc.IntegrityError: (MySQLdb.IntegrityError) (1048, "Column 'user_id' cannot be null")
-[SQL: INSERT INTO conversations (user_id, nace_sector, title, esrs_sector, company_description, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s)]
-[parameters: (None, 'H49.3.2', 'Conversation 2025-05-05 15:06', 'Road Transport', 'taxi', datetime.datetime(2025, 5, 5, 13, 6, 10, 465161), datetime.datetime(2025, 5, 5, 13, 6, 10, 465169))]
-(Background on this error at: https://sqlalche.me/e/20/gkpj)
-2025-05-05 15:11:20,373 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:286]
+2025-05-05 17:47:48,841 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:285]
+2025-05-05 17:49:20,198 INFO: Session cleared for reset [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:405]
+2025-05-05 17:49:27,360 INFO: Chat message received. Session data: {} [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-05 17:49:50,856 INFO: Chat message received. Session data: {'_fresh': False, 'company_desc': 'coal mining', 'conversation_history': [], 'conversation_id': 9, 'esrs_sector': 'Mining, Quarrying and Coal', 'initialized': True, 'nace_sector': 'B5'} [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-05 17:50:53,207 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:285]
+2025-05-05 17:58:34,486 ERROR: Login error: 'SecureCookieSession' object has no attribute 'regenerate' [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:609]
+2025-05-05 17:58:34,516 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:285]
+2025-05-05 17:58:36,533 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:285]
+2025-05-05 17:58:37,161 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:285]
+2025-05-05 17:58:37,711 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:285]
+2025-05-05 17:58:38,246 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:285]
+2025-05-05 17:58:38,750 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:285]
+2025-05-05 17:58:39,266 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:285]
+2025-05-05 17:58:40,384 INFO: User logged out: DEJUAMIG34 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:618]
+2025-05-05 17:58:40,779 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:285]
+2025-05-05 17:58:45,762 INFO: Chat message received. Session data: {} [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-05 17:58:53,922 INFO: Chat message received. Session data: {'_fresh': False, 'company_desc': 'fishing', 'conversation_history': [], 'conversation_id': 10, 'esrs_sector': 'Agnostic', 'initialized': True, 'nace_sector': 'A3'} [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-06 08:53:07,587 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:285]
+2025-05-06 10:16:44,043 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:285]
+2025-05-06 10:16:50,651 ERROR: Login error: 'SecureCookieSession' object has no attribute 'regenerate' [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:609]
+2025-05-06 10:16:50,757 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:285]
+2025-05-06 10:16:52,984 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:285]
+2025-05-06 10:16:55,313 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:285]
+2025-05-06 10:17:01,860 INFO: Profile updated for user: DEJUAMIG345 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:794]
+2025-05-06 10:17:15,838 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:285]
+2025-05-06 11:22:44,790 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:285]
+2025-05-06 11:22:51,997 INFO: Session cleared for reset [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:405]
+2025-05-06 11:23:17,738 INFO: Chat message received. Session data: {} [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-06 11:35:08,690 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:285]
+2025-05-06 11:37:38,925 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:285]
+2025-05-06 12:01:04,761 INFO: ESGenerator startup [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:41]
+2025-05-06 12:01:33,108 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
+2025-05-06 12:01:38,727 ERROR: Login error: 'SecureCookieSession' object has no attribute 'regenerate' [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:619]
+2025-05-06 12:01:38,760 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
+2025-05-06 12:01:41,370 INFO: Chat message received. Session data: {'_fresh': True, '_id': 'b42f574a0db665008e5871b8820a048262a1cec362240e8665f84fbc2e273fd473a73f214d645c32ec6b13b298b27718c281f20567964b8fd1e2e6f4f046fb10', '_user_id': '7', 'company_desc': 'fishing', 'conversation_history': [], 'conversation_id': 11, 'esrs_sector': 'Agnostic', 'initialized': True, 'nace_sector': 'A3'} [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-06 12:01:52,374 INFO: Session cleared for reset [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:415]
+2025-05-06 12:01:59,445 INFO: Chat message received. Session data: {} [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-06 12:02:00,456 INFO: Creating new conversation for user_id: None [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:225]
+2025-05-06 12:02:02,537 INFO: Chat message received. Session data: {'_fresh': False, 'company_desc': 'taxi', 'conversation_history': [], 'conversation_id': 12, 'esrs_sector': 'Road Transport', 'initialized': True, 'nace_sector': 'H49.3.2'} [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:207]
+2025-05-06 12:02:40,335 ERROR: Login error: 'SecureCookieSession' object has no attribute 'regenerate' [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:619]
+2025-05-06 12:02:40,368 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
+2025-05-06 12:02:46,530 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
+2025-05-06 12:02:50,583 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
+2025-05-06 12:03:04,180 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
+2025-05-06 12:03:07,930 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
+2025-05-06 12:03:30,590 INFO: Content saved by user 7 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:403]
+2025-05-06 12:03:31,705 INFO: Document updated by user 7: 1 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:925]
+2025-05-06 12:03:38,707 INFO: User logged out: DEJUAMIG345 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:628]
+2025-05-06 12:03:38,740 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
+2025-05-06 12:03:39,108 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
+2025-05-06 12:03:45,505 ERROR: Login error: 'SecureCookieSession' object has no attribute 'regenerate' [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:619]
+2025-05-06 12:03:45,539 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
+2025-05-06 12:04:01,224 INFO: Document updated by user 7: 1 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:925]
+2025-05-06 12:04:02,721 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
+2025-05-06 12:04:14,316 INFO: User logged out: DEJUAMIG345 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:628]
+2025-05-06 12:04:14,350 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
+2025-05-06 12:04:14,576 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
+2025-05-06 12:04:22,093 ERROR: Login error: 'SecureCookieSession' object has no attribute 'regenerate' [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:619]
+2025-05-06 12:04:22,125 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
+2025-05-06 12:04:30,331 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
+2025-05-06 12:05:26,751 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
+2025-05-06 12:05:39,528 INFO: Conversation deleted by user 7: 7 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:874]
+2025-05-06 12:05:42,524 INFO: Document deleted by user 7: 1 [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:940]
+2025-05-06 12:06:10,720 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
+2025-05-06 12:08:05,961 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]

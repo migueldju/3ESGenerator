@@ -71,8 +71,14 @@ const MyContentPage = () => {
       
       const data = await response.json();
       
+      // For debugging
+      console.log('All conversations data:', data);
+      
       // Format conversation titles
       const processedData = data.map(conversation => {
+        // For debugging - log each conversation object
+        console.log('Processing conversation:', conversation);
+        
         const createdDate = new Date(conversation.created_at);
         const day = String(createdDate.getDate()).padStart(2, '0');
         const month = String(createdDate.getMonth() + 1).padStart(2, '0');
@@ -80,9 +86,16 @@ const MyContentPage = () => {
         const hours = String(createdDate.getHours()).padStart(2, '0');
         const minutes = String(createdDate.getMinutes()).padStart(2, '0');
         
-        // Extract a brief description from company_description
-        const companyDesc = conversation.company_description || '';
-        const shortDesc = companyDesc.length > 40 ? 
+        // Extract a brief description from company_description - be explicit about property access
+        let companyDesc = '';
+        if (conversation.company_description !== undefined && conversation.company_description !== null) {
+          companyDesc = conversation.company_description;
+          console.log(`Company description found for conversation ${conversation.id}:`, companyDesc);
+        } else {
+          console.log(`No company description for conversation ${conversation.id}`);
+        }
+        
+        const shortDesc = companyDesc && companyDesc.length > 40 ? 
                           companyDesc.substring(0, 40).trim() + '...' : 
                           companyDesc;
         
@@ -197,6 +210,20 @@ const MyContentPage = () => {
     }
   };
 
+  // Function to safely display company description
+  const getCompanyDescription = (conversation) => {
+    if (!conversation) return 'No description available';
+    
+    // Check if company_description exists and is not empty
+    if (typeof conversation.company_description === 'string' && conversation.company_description.trim() !== '') {
+      const desc = conversation.company_description;
+      // Truncate if longer than 100 characters
+      return desc.length > 100 ? desc.substring(0, 100).trim() + '...' : desc;
+    }
+    
+    return 'No description available';
+  };
+
   return (
     <div className="app-container">
       <Header />
@@ -238,10 +265,9 @@ const MyContentPage = () => {
                     {conversations.map(conversation => (
                       <div key={conversation.id} className="item-card">
                         <div className="item-info">
-                          {/* Use the displayTitle instead of title */}
                           <h3>{conversation.displayTitle}</h3>
                           <div className="item-details">
-                            <span className="detail">NACE Sector: {conversation.nace_sector}</span>
+                            <span className="detail">Company Description: {getCompanyDescription(conversation)}</span>
                             <span className="detail">ESRS Sector: {conversation.esrs_sector}</span>
                           </div>
                         </div>
