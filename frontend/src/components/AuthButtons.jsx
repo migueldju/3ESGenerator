@@ -1,3 +1,5 @@
+// frontend/src/components/AuthButtons.jsx
+
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -13,20 +15,29 @@ const AuthButtons = () => {
 
   const checkLoginStatus = async () => {
     try {
+      console.log('AuthButtons checking login status...');
       const response = await fetch('/api/check-auth', {
         method: 'GET',
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       
       if (response.ok) {
         const data = await response.json();
+        console.log('AuthButtons auth status:', data);
         setIsLoggedIn(data.isAuthenticated);
         if (data.isAuthenticated) {
           setUsername(data.username);
         }
+      } else {
+        console.error('Auth check failed:', response.status);
+        setIsLoggedIn(false);
       }
     } catch (error) {
       console.error('Error checking authentication status:', error);
+      setIsLoggedIn(false);
     }
   };
 
@@ -35,6 +46,7 @@ const AuthButtons = () => {
   }, []);
 
   useEffect(() => {
+    // Verificar el estado de autenticación cuando cambia la ruta
     checkLoginStatus();
   }, [location]);
 
@@ -42,22 +54,18 @@ const AuthButtons = () => {
     try {
       const response = await fetch('/api/logout', {
         method: 'POST',
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       
       if (response.ok) {
-        // En lugar de solo navegar, recargar la página completamente
         setIsLoggedIn(false);
         setUsername('');
         setDropdownOpen(false);
-        
-        // Navegar primero a la página principal
         navigate('/');
-        
-        // Luego recargar la página para limpiar todo el estado
-        setTimeout(() => {
-          window.location.reload();
-        }, 100); // Pequeño retraso para asegurar que la navegación ocurra primero
+        window.location.reload();
       }
     } catch (error) {
       console.error('Error logging out:', error);

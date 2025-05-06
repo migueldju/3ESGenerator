@@ -206,6 +206,9 @@ def chat():
     user_message = request.form['message']
     app.logger.info(f"Chat message received. Session data: {dict(session)}")
     
+    # Obtener o crear conversation_id único por sesión
+    conversation_id = session.get('conversation_id')
+    
     if 'initialized' not in session:
         company_desc = user_message
         result = process_company_description(company_desc)
@@ -214,37 +217,37 @@ def chat():
         session['company_desc'] = company_desc
         session['nace_sector'] = result['nace_sector']
         session['esrs_sector'] = result['esrs_sector']
-        session['conversation_history'] = [
-            f"Q: {company_desc}",
-            f"A: Thank you for your company description. Based on my analysis, your company falls under NACE sector {result['nace_sector']}. How can I help you with your ESRS reporting requirements?"
-        ]
+        
+        # Verificar si ya existe una conversación en esta sesión
+        if not conversation_id:
+            conversation = Conversation(
+                user_id=current_user.id if current_user.is_authenticated else None,
+                nace_sector=result['nace_sector'],
+                title="Conversation " + datetime.now().strftime("%Y-%m-%d %H:%M"),
+                esrs_sector=result['esrs_sector'],
+                company_description=company_desc
+            )
+            db.session.add(conversation)
+            db.session.commit()
+            
+            # Guardar el ID de la conversación en la sesión
+            session['conversation_id'] = conversation.id
+            conversation_id = conversation.id
+        
+        # Crear historia de conversación si no existe
+        if 'conversation_history' not in session:
+            session['conversation_history'] = []
         
         session.modified = True
         
-        # ALWAYS create a conversation, even for anonymous users
-        conversation = Conversation(
-            user_id=current_user.id if current_user.is_authenticated else None,
-            nace_sector=result['nace_sector'],
-            title="Conversation " + datetime.now().strftime("%Y-%m-%d %H:%M"),
-            esrs_sector=result['esrs_sector'],
-            company_description=company_desc
-        )
-        db.session.add(conversation)
-        db.session.commit()
-        
-        # Store conversation_id in session
-        session['conversation_id'] = conversation.id
-        app.logger.info(f"Created conversation {conversation.id}, stored in session")
-        
-        # Save the first answer
+        # Guardar la primera respuesta
         answer = Answer(
-            conversation_id=conversation.id,
+            conversation_id=conversation_id,
             question=user_message,
             answer=f"Thank you for your company description. Based on my analysis, your company falls under NACE sector {result['nace_sector']}. How can I help you with your ESRS reporting requirements?"
         )
         db.session.add(answer)
         db.session.commit()
-        app.logger.info(f"Saved first answer to conversation {conversation.id}")
         
         return jsonify({
             'answer': f"Thank you for your company description. Based on my analysis, your company falls under NACE sector {result['nace_sector']}. How can I help you with your ESRS reporting requirements?",
@@ -257,15 +260,14 @@ def chat():
         response = process_question(user_message)
         response_data = response.get_json()
         
-        # Update conversation history in session
+        # Actualizar historial de conversación
         conversation_history = session.get('conversation_history', [])
         conversation_history.append(f"Q: {user_message}")
         conversation_history.append(f"A: {response_data['answer']}")
         session['conversation_history'] = conversation_history
         session.modified = True
         
-        # ALWAYS save to database if conversation_id exists
-        conversation_id = session.get('conversation_id')
+        # Guardar en la base de datos
         if conversation_id:
             answer = Answer(
                 conversation_id=conversation_id,
@@ -274,18 +276,13 @@ def chat():
             )
             db.session.add(answer)
             db.session.commit()
-            app.logger.info(f"Saved answer to conversation {conversation_id}")
-        else:
-            app.logger.warning("No conversation_id in session when saving answer")
         
         return response
-    
+
 @app.route('/chat/get_conversation', methods=['GET'])
 def get_conversation():
     """Get the current conversation state"""
     app.logger.info("Getting conversation")
-    app.logger.info(f"Session keys: {list(session.keys())}")
-    app.logger.info(f"User authenticated: {current_user.is_authenticated}")
     
     if 'initialized' not in session:
         return jsonify({
@@ -298,22 +295,16 @@ def get_conversation():
     messages = []
     conversation_id = session.get('conversation_id')
     
-    app.logger.info(f"Checking for conversation_id: {conversation_id}")
-    app.logger.info(f"conversation_id: {conversation_id}, authenticated: {current_user.is_authenticated}")
-    
-    # Get messages from database if we have a conversation_id
     if conversation_id:
+        # Obtener mensajes desde la base de datos
         conversation = Conversation.query.filter_by(id=conversation_id).first()
         if conversation:
             answers = Answer.query.filter_by(conversation_id=conversation_id).order_by(Answer.created_at).all()
             for answer in answers:
                 messages.append({'type': 'user', 'content': answer.question})
                 messages.append({'type': 'bot', 'content': answer.answer})
-            app.logger.info(f"Loaded {len(answers)} answers from DB for conversation {conversation_id}")
-        else:
-            app.logger.warning(f"Conversation {conversation_id} not found in DB")
     else:
-        # Fallback to session history
+        # Fallback al historial de sesión
         conversation_history = session.get('conversation_history', [])
         for i in range(0, len(conversation_history), 2):
             if i < len(conversation_history) and conversation_history[i].startswith('Q: '):
@@ -409,13 +400,84 @@ def save_content():
 @app.route('/reset', methods=['POST'])
 def reset_session():
     try:
-        # Clear all session data
+        # Limpiar todo el estado de la sesión
         session.clear()
         app.logger.info("Session cleared for reset")
         return jsonify({'status': 'success'})
     except Exception as e:
         app.logger.error(f"Error resetting session: {str(e)}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
+    
+@app.route('/chat/load_conversation/<int:conversation_id>', methods=['POST'])
+@login_required
+def load_conversation(conversation_id):
+    """Cargar una conversación específica del usuario"""
+    try:
+        # Verificar que la conversación pertenezca al usuario actual
+        conversation = Conversation.query.filter_by(
+            id=conversation_id, 
+            user_id=current_user.id
+        ).first()
+        
+        if not conversation:
+            return jsonify({'error': 'Conversation not found'}), 404
+        
+        # Guardar la conversación en la sesión
+        session['conversation_id'] = conversation.id
+        session['initialized'] = True
+        session['company_desc'] = conversation.company_description
+        session['nace_sector'] = conversation.nace_sector
+        session['esrs_sector'] = conversation.esrs_sector
+        
+        # Cargar los mensajes
+        answers = Answer.query.filter_by(conversation_id=conversation_id).order_by(Answer.created_at).all()
+        messages = []
+        for answer in answers:
+            messages.append({'type': 'user', 'content': answer.question})
+            messages.append({'type': 'bot', 'content': answer.answer})
+        
+        session.modified = True
+        
+        return jsonify({
+            'success': True,
+            'conversation': {
+                'id': conversation.id,
+                'title': conversation.title,
+                'nace_sector': conversation.nace_sector,
+                'esrs_sector': conversation.esrs_sector,
+                'company_description': conversation.company_description,
+                'messages': messages
+            }
+        })
+    except Exception as e:
+        app.logger.error(f"Error loading conversation: {str(e)}")
+        return jsonify({'error': 'Failed to load conversation'}), 500
+
+@app.route('/chat/save_for_later', methods=['POST'])
+def save_conversation_for_later():
+    """Guardar la conversación actual para más tarde"""
+    try:
+        conversation_id = session.get('conversation_id')
+        
+        if not conversation_id:
+            return jsonify({'error': 'No active conversation'}), 400
+        
+        # Si el usuario está registrado, actualizar el título de la conversación
+        if current_user.is_authenticated:
+            conversation = Conversation.query.filter_by(id=conversation_id).first()
+            if conversation:
+                # Actualizar el título si se proporciona
+                data = request.json
+                if data and 'title' in data:
+                    conversation.title = data['title']
+                    db.session.commit()
+        
+        # Para usuarios no registrados, la conversación se mantiene solo durante la sesión
+        return jsonify({'success': True, 'message': 'Conversation saved for later'})
+        
+    except Exception as e:
+        app.logger.error(f"Error saving conversation: {str(e)}")
+        return jsonify({'error': 'Failed to save conversation'}), 500
 
 # Authentication routes
 @app.route('/register', methods=['POST'])

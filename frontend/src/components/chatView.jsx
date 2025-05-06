@@ -1,3 +1,5 @@
+// frontend/src/components/chatView.jsx
+
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -25,6 +27,7 @@ const ChatView = () => {
   const chatContainerRef = useRef(null);
   const textareaRef = useRef(null);
   const navigate = useNavigate();
+  const isLoadingRef = useRef(false);
 
   const [placeholderText, setPlaceholder] = useState("Enter your company description...");
   const [companyDesc, setCompanyDesc] = useState('');
@@ -36,25 +39,12 @@ const ChatView = () => {
     }
   }, [messages]);
 
-  // Adjust textarea height automatically
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-      
-      if (textareaRef.current.scrollHeight > 150) {
-        textareaRef.current.style.overflowY = 'scroll';
-        textareaRef.current.style.height = '150px';
-      } else {
-        textareaRef.current.style.overflowY = 'hidden';
-      }
-    }
-  }, [inputValue]);
-
   // Fetch conversation from server
   const fetchConversation = async () => {
+    if (isLoadingRef.current) return;
+    isLoadingRef.current = true;
+    
     try {
-      console.log('Fetching conversation from server...');
       const response = await fetch('/api/chat/get_conversation', {
         method: 'GET',
         credentials: 'include'
@@ -62,7 +52,6 @@ const ChatView = () => {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('Server conversation data:', data);
         
         if (data.initialized) {
           setCompanyInfo({
@@ -73,67 +62,39 @@ const ChatView = () => {
           setPlaceholder("Ask your question here...");
           setCompanyDesc(data.company_desc);
           
-          // Restore messages if we have them
+          // Solo restaurar los mensajes si no son los de bienvenida
           if (data.messages && data.messages.length > 0) {
             setMessages(data.messages);
           }
         }
-      } else {
-        console.error('Failed to fetch conversation:', response.status);
       }
     } catch (error) {
       console.error('Error fetching conversation:', error);
-    }
-  };
-
-  // Debug function to check conversation state
-  const debugConversation = async () => {
-    try {
-      const response = await fetch('/api/chat/debug/conversation', {
-        method: 'GET',
-        credentials: 'include'
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Debug conversation data:', data);
-      }
-    } catch (error) {
-      console.error('Error debugging conversation:', error);
+    } finally {
+      isLoadingRef.current = false;
     }
   };
 
   // Check for existing session on component mount
   useEffect(() => {
     fetchConversation();
-    debugConversation(); // For debugging purposes
   }, []);
 
-  const handleInputChange = (e) => {
-    setInputValue(e.target.value);
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-  
   const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || isLoading) return;
   
-    const currentMessages = [...messages, { type: 'user', content: inputValue }];
-    setMessages(currentMessages);
-    
-    const currentInput = inputValue;
+    const userMessage = inputValue.trim();
     setInputValue('');
+    
+    // Optimistic update
+    const newMessages = [...messages, { type: 'user', content: userMessage }];
+    setMessages(newMessages);
     
     setIsLoading(true);
   
     try {
       const formData = new FormData();
-      formData.append('message', currentInput);
+      formData.append('message', userMessage);
       
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -149,7 +110,7 @@ const ChatView = () => {
           naceSector: data.nace_sector,
           esrsSector: data.esrs_sector
         });
-        setCompanyDesc(currentInput);
+        setCompanyDesc(userMessage);
         setPlaceholder("Ask your question here...");
       } 
   
@@ -167,7 +128,6 @@ const ChatView = () => {
 
   const handleReset = async () => {
     try {
-      console.log('Resetting conversation...');
       const response = await fetch('/api/reset', {
         method: 'POST',
         credentials: 'include'
@@ -258,8 +218,13 @@ const ChatView = () => {
               ref={textareaRef}
               id="user-input"
               value={inputValue}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
               placeholder={placeholderText}
               rows="1"
             />

@@ -1,8 +1,9 @@
-# debug_db.py
+# Crear archivo: backend/debug_database.py
+
 from flask import Flask
 from models import db, User, Conversation, Answer
 from config import get_config
-import os
+from sqlalchemy import inspect
 
 # Create a minimal app for debugging the database
 app = Flask(__name__)
@@ -11,50 +12,54 @@ app.config.from_object(get_config())
 db.init_app(app)
 
 with app.app_context():
-    # Verificar si las tablas existen
-    from sqlalchemy import inspect
-    inspector = inspect(db.engine)
-    tables = inspector.get_table_names()
+    print("=== VERIFICANDO CONVERSACIONES ===")
     
-    print("=== TABLAS EN LA BASE DE DATOS ===")
-    for table in tables:
-        print(f"- {table}")
+    # Verificar todas las conversaciones
+    conversations = Conversation.query.all()
+    print(f"\nTotal de conversaciones: {len(conversations)}")
     
-    print("\n=== VERIFICANDO CONTENIDO ===")
+    for conv in conversations:
+        print(f"\nConversación ID: {conv.id}")
+        print(f"  User ID: {conv.user_id} {'(NULL)' if conv.user_id is None else ''}")
+        print(f"  Title: {conv.title}")
+        print(f"  NACE Sector: {conv.nace_sector}")
+        print(f"  Created: {conv.created_at}")
+        
+        # Verificar si el usuario existe
+        if conv.user_id:
+            user = User.query.get(conv.user_id)
+            if user:
+                print(f"  User: {user.username} ({user.email})")
+            else:
+                print(f"  ERROR: User ID {conv.user_id} no existe!")
+        
+        # Contar respuestas
+        answers_count = Answer.query.filter_by(conversation_id=conv.id).count()
+        print(f"  Respuestas: {answers_count}")
     
-    # Verificar usuarios
+    print("\n=== VERIFICANDO USUARIOS ===")
     users = User.query.all()
-    print(f"\nUsuarios encontrados: {len(users)}")
+    print(f"\nTotal de usuarios: {len(users)}")
+    
     for user in users:
-        print(f"  Usuario ID: {user.id}, Username: {user.username}, Email: {user.email}")
+        print(f"\nUsuario ID: {user.id}")
+        print(f"  Username: {user.username}")
+        print(f"  Email: {user.email}")
+        print(f"  Verificado: {user.is_verified}")
+        
+        # Contar conversaciones
+        conv_count = Conversation.query.filter_by(user_id=user.id).count()
+        print(f"  Conversaciones: {conv_count}")
     
-    # Verificar conversaciones
-    conversations = Conversation.query.all()
-    print(f"\nConversaciones encontradas: {len(conversations)}")
-    for conv in conversations:
-        print(f"  Conversación ID: {conv.id}, User ID: {conv.user_id}, Title: {conv.title}")
+    print("\n=== VERIFICANDO CONVERSACIONES ANÓNIMAS ===")
+    anonymous_convs = Conversation.query.filter_by(user_id=None).all()
+    print(f"\nConversaciones anónimas: {len(anonymous_convs)}")
     
-    # Verificar respuestas
-    answers = Answer.query.all()
-    print(f"\nRespuestas encontradas: {len(answers)}")
-    for answer in answers:
-        print(f"  Respuesta ID: {answer.id}, Conversation ID: {answer.conversation_id}")
-        print(f"    Pregunta: {answer.question[:50]}...")
-        print(f"    Respuesta: {answer.answer[:50]}...")
+    for conv in anonymous_convs:
+        print(f"  ID: {conv.id}, Title: {conv.title}")
+        print(f"  Created: {conv.created_at}")
     
-    print("\n=== VERIFICANDO RESTRICCIONES DE CLAVES EXTERNAS ===")
-    conversations = Conversation.query.all()
-    for conv in conversations:
-        user = User.query.get(conv.user_id)
-        if user:
-            print(f"  Conversación {conv.id} tiene usuario válido: {user.username}")
-        else:
-            print(f"  ERROR: Conversación {conv.id} tiene user_id inválido: {conv.user_id}")
-    
-    answers = Answer.query.all()
-    for answer in answers:
-        conv = Conversation.query.get(answer.conversation_id)
-        if conv:
-            print(f"  Respuesta {answer.id} tiene conversación válida: {conv.id}")
-        else:
-            print(f"  ERROR: Respuesta {answer.id} tiene conversation_id inválido: {answer.conversation_id}")
+    print("\n=== VERIFICANDO ESQUEMA DE TABLA CONVERSATIONS ===")
+    inspector = inspect(db.engine)
+    for column in inspector.get_columns('conversations'):
+        print(f"  {column['name']}: {column['type']}, nullable: {column['nullable']}")
