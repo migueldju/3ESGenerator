@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faSignOutAlt, faFile, faComments } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 import '../styles/AuthButtons.css';
 
 const AuthButtons = () => {
@@ -93,12 +93,6 @@ const AuthButtons = () => {
             <div className="user-dropdown">
               <Link to="/profile" className="dropdown-item">
                 <FontAwesomeIcon icon={faUser} /> My Profile
-              </Link>
-              <Link to="/my-content" className="dropdown-item">
-                <FontAwesomeIcon icon={faComments} /> My Conversations
-              </Link>
-              <Link to="/my-content" className="dropdown-item">
-                <FontAwesomeIcon icon={faFile} /> My Documents
               </Link>
               <button 
                 className="dropdown-item logout-button"

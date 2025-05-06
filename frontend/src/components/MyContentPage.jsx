@@ -71,14 +71,8 @@ const MyContentPage = () => {
       
       const data = await response.json();
       
-      // For debugging
-      console.log('All conversations data:', data);
-      
       // Format conversation titles
       const processedData = data.map(conversation => {
-        // For debugging - log each conversation object
-        console.log('Processing conversation:', conversation);
-        
         const createdDate = new Date(conversation.created_at);
         const day = String(createdDate.getDate()).padStart(2, '0');
         const month = String(createdDate.getMonth() + 1).padStart(2, '0');
@@ -86,21 +80,8 @@ const MyContentPage = () => {
         const hours = String(createdDate.getHours()).padStart(2, '0');
         const minutes = String(createdDate.getMinutes()).padStart(2, '0');
         
-        // Extract a brief description from company_description - be explicit about property access
-        let companyDesc = '';
-        if (conversation.company_description !== undefined && conversation.company_description !== null) {
-          companyDesc = conversation.company_description;
-          console.log(`Company description found for conversation ${conversation.id}:`, companyDesc);
-        } else {
-          console.log(`No company description for conversation ${conversation.id}`);
-        }
-        
-        const shortDesc = companyDesc && companyDesc.length > 40 ? 
-                          companyDesc.substring(0, 40).trim() + '...' : 
-                          companyDesc;
-        
-        // Set the display title - but don't modify the actual title in the database
-        conversation.displayTitle = `Conversation ${day}-${month}-${year} ${hours}:${minutes}${shortDesc ? ' - ' + shortDesc : ''}`;
+        // Use title from DB as is
+        conversation.displayTitle = conversation.title || `Conversation ${day}-${month}-${year} ${hours}:${minutes}`;
         
         return conversation;
       });
@@ -210,15 +191,17 @@ const MyContentPage = () => {
     }
   };
 
-  // Function to safely display company description
+  // Function to safely display company description with improved handling
   const getCompanyDescription = (conversation) => {
-    if (!conversation) return 'No description available';
+    if (!conversation) return '';
     
     // Check if company_description exists and is not empty
-    if (typeof conversation.company_description === 'string' && conversation.company_description.trim() !== '') {
-      const desc = conversation.company_description;
-      // Truncate if longer than 100 characters
-      return desc.length > 100 ? desc.substring(0, 100).trim() + '...' : desc;
+    if (conversation.company_description && typeof conversation.company_description === 'string') {
+      const desc = conversation.company_description.trim();
+      if (desc.length === 0) return 'No description available';
+      
+      // Truncate if longer than 150 characters
+      return desc.length > 150 ? desc.substring(0, 150).trim() + '...' : desc;
     }
     
     return 'No description available';
@@ -267,8 +250,16 @@ const MyContentPage = () => {
                         <div className="item-info">
                           <h3>{conversation.displayTitle}</h3>
                           <div className="item-details">
-                            <span className="detail">Company Description: {getCompanyDescription(conversation)}</span>
-                            <span className="detail">ESRS Sector: {conversation.esrs_sector}</span>
+                            {conversation.company_description && (
+                              <div className="company-description-container">
+                                <span className="detail-label">Company description:</span>
+                                <span className="detail-content">{getCompanyDescription(conversation)}</span>
+                              </div>
+                            )}
+                            <div className="additional-details">
+                              <span className="detail">ESRS Sector: {conversation.esrs_sector || 'Not specified'}</span>
+                              <span className="detail">NACE Sector: {conversation.nace_sector || 'Not specified'}</span>
+                            </div>
                           </div>
                         </div>
                         <div className="item-actions">
