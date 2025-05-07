@@ -43,3 +43,7 @@
 2025-05-07 20:54:19,911 ERROR: Login error: 'SecureCookieSession' object has no attribute 'regenerate' [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:631]
 2025-05-07 20:54:19,987 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
 2025-05-07 21:06:02,684 INFO: ESGenerator startup [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:41]
+2025-05-07 21:39:30,330 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
+2025-05-07 21:51:48,493 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
+2025-05-07 22:40:11,035 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]
+2025-05-08 00:30:25,294 INFO: Getting conversation [in C:\Users\Miguel de Juan Urien\Desktop\TFG\ubu-esgenerator\backend\app.py:290]

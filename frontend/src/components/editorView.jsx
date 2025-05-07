@@ -22,9 +22,15 @@ const EditorView = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [documentId, setDocumentId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [useFilePicker, setUseFilePicker] = useState(false);
   const quillRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Check if File System Access API is supported
+  useEffect(() => {
+    setUseFilePicker('showSaveFilePicker' in window);
+  }, []);
 
   // Verificar el estado de autenticación y cargar documento si es necesario
   useEffect(() => {
@@ -205,6 +211,7 @@ const EditorView = () => {
     }
   };
 
+  // Función para manejar la exportación
   const handleExport = async () => {
     if (!content.trim()) {
       setStatusMessage('Cannot download empty content.');
@@ -216,15 +223,19 @@ const EditorView = () => {
     setStatusMessage('');
     
     try {
+      let success = false;
+      
       if (exportFormat === 'pdf') {
-        await exportToPDF();
+        success = await exportToPDF();
       } else if (exportFormat === 'docx') {
-        await exportToDOCX();
+        success = await exportToDOCX();
       } else if (exportFormat === 'txt') {
-        exportToTXT();
+        success = await exportToTXT();
       }
       
-      setStatusMessage(`${exportFormat.toUpperCase()} downloaded successfully.`);
+      if (success) {
+        setStatusMessage(`${exportFormat.toUpperCase()} downloaded successfully.`);
+      }
     } catch (error) {
       console.error(`Error downloading ${exportFormat.toUpperCase()}:`, error);
       setStatusMessage(`Error downloading ${exportFormat.toUpperCase()}. Please try again.`);
@@ -241,38 +252,103 @@ const EditorView = () => {
       const quill = quillRef.current.getEditor();
       const delta = quill.getContents();
       const pdfBlob = await pdfExporter.generatePdf(delta);
+      
+      // Usar directamente saveAs para asegurar que se muestre el indicador de descarga
       saveAs(pdfBlob, `${documentTitle || 'ESGenerator_Report'}.pdf`);
+      
+      return true;
     } catch (error) {
       console.error('Error exporting to PDF:', error);
       throw error;
     }
   };
-
+  
   const exportToDOCX = async () => {
     try {
       const quill = quillRef.current.getEditor();
       const delta = quill.getContents();
       
-      const docBlob = await generateWord(delta);
-      saveAs(docBlob, `${documentTitle || 'ESGenerator_Report'}.docx`);
+      // Usar opciones adecuadas para la generación de DOCX
+      const options = {
+        exportAs: 'blob'
+      };
+      
+      const docBlob = await generateWord(delta, options);
+      
+      // Usar directamente saveAs con el tipo MIME correcto
+      saveAs(docBlob, `${documentTitle || 'ESGenerator_Report'}.docx`, {
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      });
+      
+      return true;
     } catch (error) {
       console.error('Error exporting to DOCX:', error);
       throw error;
     }
   };
-
-  const exportToTXT = () => {
+  
+  const exportToTXT = async () => {
     try {
-      // Remove HTML tags to get plain text
+      // Extraer texto plano del contenido HTML
       const tempElement = document.createElement('div');
       tempElement.innerHTML = content;
       const plainText = tempElement.textContent || tempElement.innerText || '';
       
+      // Crear blob con el texto plano
       const blob = new Blob([plainText], { type: 'text/plain;charset=utf-8' });
+      
+      // Usar directamente saveAs para que se muestre el indicador de descarga
       saveAs(blob, `${documentTitle || 'ESGenerator_Report'}.txt`);
+      
+      return true;
     } catch (error) {
       console.error('Error exporting to TXT:', error);
       throw error;
+    }
+  };
+
+  
+  
+
+  // Function to save file using File System Access API
+  const saveWithFilePicker = async (blob, suggestedName, mimeType) => {
+    try {
+      // Define options for the file picker
+      const options = {
+        suggestedName: suggestedName,
+        types: [{
+          description: 'Document',
+          accept: {
+            [mimeType]: [`.${suggestedName.split('.').pop()}`]
+          }
+        }]
+      };
+      
+      // Show the file picker
+      const fileHandle = await window.showSaveFilePicker(options);
+      
+      // Create a writable stream
+      const writable = await fileHandle.createWritable();
+      
+      // Write the blob to the file
+      await writable.write(blob);
+      
+      // Close the file and write the contents to disk
+      await writable.close();
+      
+      return true;
+    } catch (error) {
+      // User canceled the save dialog or another error occurred
+      console.error('Error in file picker:', error);
+      
+      // If user canceled, don't throw error, just fall back to regular download
+      if (error.name !== 'AbortError') {
+        throw error;
+      }
+      
+      // Fall back to saveAs for aborted picker or unsupported browsers
+      saveAs(blob, suggestedName);
+      return false;
     }
   };
 
@@ -310,7 +386,7 @@ const EditorView = () => {
                 className="nav-button inactive" 
                 onClick={() => handleNavigation('/my-content')}
               >
-                <FontAwesomeIcon icon={faHistory} /> My Content
+              My Content
               </button>
             )}
           </div>

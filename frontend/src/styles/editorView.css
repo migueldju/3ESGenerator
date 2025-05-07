@@ -162,7 +162,9 @@
 .export-options {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 10px;
+  margin-left: auto;
 }
 
 .format-selector {
@@ -171,6 +173,41 @@
   border-radius: 4px;
   font-size: 14px;
   background-color: white;
+}
+
+.download-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.download-button:hover:not(:disabled) {
+  background-color: #1e5095;
+}
+
+.download-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .export-options {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .download-button {
+    flex: 1;
+  }
 }
 
 .status-message {
