@@ -203,6 +203,8 @@ def serve(path):
 @app.route('/chat', methods=['POST'])
 @limiter.limit("30 per minute")
 def chat():
+    if(current_user is not None and current_user.is_authenticated):
+        print("User is authenticated")
     user_message = request.form['message']
     app.logger.info(f"Chat message received. Session data: {dict(session)}")
     
@@ -601,10 +603,17 @@ def login():
         if not user.is_verified:
             return jsonify({'message': 'Please verify your email before logging in'}), 401
         
-        # Log in user
         login_user(user)
         
         session.regenerate()
+        
+        conversation_id = session.get('conversation_id')
+        if conversation_id:
+            conversation = Conversation.query.filter_by(id=conversation_id).first()
+            if conversation.user_id is None:
+                conversation.user_id = user.id
+                db.session.commit()
+                app.logger.info(f"Associated conversation {conversation_id} with user {user.username}")
         
         app.logger.info(f"User logged in: {user.username}")
         return jsonify({

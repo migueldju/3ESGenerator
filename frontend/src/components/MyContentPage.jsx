@@ -71,8 +71,11 @@ const MyContentPage = () => {
       
       const data = await response.json();
       
-      // Format conversation titles
-      const processedData = data.map(conversation => {
+      // Process conversation data
+      const processedData = [];
+      
+      for (const conversation of data) {
+        // Format created date
         const createdDate = new Date(conversation.created_at);
         const day = String(createdDate.getDate()).padStart(2, '0');
         const month = String(createdDate.getMonth() + 1).padStart(2, '0');
@@ -83,8 +86,24 @@ const MyContentPage = () => {
         // Use title from DB as is
         conversation.displayTitle = conversation.title || `Conversation ${day}-${month}-${year} ${hours}:${minutes}`;
         
-        return conversation;
-      });
+        // Fetch conversation details to get answer count
+        try {
+          const detailsResponse = await fetch(`/api/user/conversation/${conversation.id}`, {
+            credentials: 'include'
+          });
+          
+          if (detailsResponse.ok) {
+            const details = await detailsResponse.json();
+            // Set answer count (divide by 2 because each Q/A pair counts as 2 items)
+            conversation.answerCount = details.answers ? Math.floor(details.answers.length / 2) : 0;
+          }
+        } catch (error) {
+          console.error(`Error fetching details for conversation ${conversation.id}:`, error);
+          conversation.answerCount = 0;
+        }
+        
+        processedData.push(conversation);
+      }
       
       setConversations(processedData);
     } catch (error) {
@@ -250,15 +269,13 @@ const MyContentPage = () => {
                         <div className="item-info">
                           <h3>{conversation.displayTitle}</h3>
                           <div className="item-details">
-                            {conversation.company_description && (
-                              <div className="company-description-container">
-                                <span className="detail-label">Company description:</span>
-                                <span className="detail-content">{getCompanyDescription(conversation)}</span>
-                              </div>
-                            )}
+                            <div className="company-description-container">
+                              <span className="detail-label">Company description:</span>
+                              <span className="detail-content">{getCompanyDescription(conversation)}</span>
+                            </div>
                             <div className="additional-details">
                               <span className="detail">NACE Sector: {conversation.nace_sector || 'Not specified'}</span>
-                              <span className="detail">Company Description: {getCompanyDescription(conversation)}</span>
+                              <span className="detail">Answers: {conversation.answerCount || 0}</span>
                             </div>
                           </div>
                         </div>

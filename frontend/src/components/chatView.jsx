@@ -196,14 +196,14 @@ const ChatView = () => {
               className="nav-button inactive" 
               onClick={() => handleNavigate('/editor')}
             >
-              <FontAwesomeIcon icon={faFile} /> Editor
+            Editor
             </button>
             {isLoggedIn && (
               <button 
                 className="nav-button inactive" 
                 onClick={() => handleNavigate('/my-content')}
               >
-                <FontAwesomeIcon icon={faHistory} /> My Content
+            My Content
               </button>
             )}
           </div>
