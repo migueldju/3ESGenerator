@@ -13,7 +13,6 @@ const VerifyEmailPage = () => {
 
   const verifyEmail = useCallback(async () => {
     try {
-      // First, check if the token is in the URL
       if (!token) {
         setVerificationStatus('error');
         setMessage('No verification token provided. Please check your email link.');
@@ -21,7 +20,6 @@ const VerifyEmailPage = () => {
         return;
       }
       
-      // Log the exact URL being called
       const url = `/api/verify-email/${token}`;
       console.log(`Making verification request to: ${url}`);
       
@@ -34,9 +32,7 @@ const VerifyEmailPage = () => {
       });
 
       console.log("Response status:", response.status);
-      
-      // Parse the response
-      let data = {};
+            let data = {};
       try {
         const text = await response.text();
         console.log("Raw response:", text);
@@ -48,8 +44,7 @@ const VerifyEmailPage = () => {
       } catch (parseError) {
         console.error("JSON parse error:", parseError);
       }
-      
-      // Check status code
+    
       if (response.ok) {
         setVerificationStatus('success');
         setMessage(data.message || 'Email verified successfully. You can now log in to your account.');

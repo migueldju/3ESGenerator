@@ -27,16 +27,13 @@ const EditorView = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check if File System Access API is supported
   useEffect(() => {
     setUseFilePicker('showSaveFilePicker' in window);
   }, []);
 
-  // Verificar el estado de autenticación y cargar documento si es necesario
   useEffect(() => {
     checkAuthStatus();
     
-    // Check if we have a document ID in the URL
     const params = new URLSearchParams(location.search);
     const docId = params.get('document');
     

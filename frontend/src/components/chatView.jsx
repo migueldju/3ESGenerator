@@ -33,7 +33,6 @@ const ChatView = () => {
   const [placeholderText, setPlaceholder] = useState("Enter your company description...");
   const [companyDesc, setCompanyDesc] = useState('');
 
-  // Check login status
   useEffect(() => {
     checkAuthStatus();
   }, []);
@@ -57,14 +56,12 @@ const ChatView = () => {
     }
   };
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages]);
 
-  // Fetch conversation from server
   const fetchConversation = async () => {
     if (isLoadingRef.current) return;
     isLoadingRef.current = true;
@@ -87,7 +84,6 @@ const ChatView = () => {
           setPlaceholder("Ask your question here...");
           setCompanyDesc(data.company_desc);
           
-          // Solo restaurar los mensajes si no son los de bienvenida
           if (data.messages && data.messages.length > 0) {
             setMessages(data.messages);
           }
@@ -100,7 +96,6 @@ const ChatView = () => {
     }
   };
 
-  // Check for existing session on component mount
   useEffect(() => {
     fetchConversation();
   }, []);
@@ -111,7 +106,6 @@ const ChatView = () => {
     const userMessage = inputValue.trim();
     setInputValue('');
     
-    // Optimistic update
     const newMessages = [...messages, { type: 'user', content: userMessage }];
     setMessages(newMessages);
     

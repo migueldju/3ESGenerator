@@ -60,7 +60,6 @@ const ResetPasswordPage = () => {
     setIsLoading(true);
     
     try {
-      // Get CSRF token from the meta tag if available
       let csrfToken = '';
       const csrfElement = document.querySelector('meta[name="csrf-token"]');
       if (csrfElement) {

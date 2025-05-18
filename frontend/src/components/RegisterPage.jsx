@@ -22,7 +22,6 @@ const RegisterPage = () => {
       [name]: value
     });
     
-    // Clear error when typing
     if (errors[name]) {
       setErrors({
         ...errors,
@@ -71,7 +70,6 @@ const RegisterPage = () => {
     setIsLoading(true);
     
     try {
-      // Use the direct backend URL for now
       const response = await fetch('/api/register', {
         method: 'POST',
         headers: {
@@ -85,7 +83,6 @@ const RegisterPage = () => {
         credentials: 'include'
       });
       
-      // Check if response is JSON
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {
         const data = await response.json();
@@ -99,7 +96,6 @@ const RegisterPage = () => {
           state: { message: 'Registration successful! Please check your email to verify your account.' } 
         });
       } else {
-        // Not JSON, log the text for debugging
         const text = await response.text();
         console.error("Received non-JSON response:", text);
         throw new Error('Server returned an unexpected response format. Please try again later.');

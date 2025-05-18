@@ -1,7 +1,9 @@
+// frontend/src/components/MyContentPage.jsx
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faComments, faFile, faTrash, faEye, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faComments, faFile, faTrash, faEye, faSpinner, faEdit } from '@fortawesome/free-solid-svg-icons';
 import Header from './Header';
 import '../styles/MyContentPage.css';
 
@@ -44,10 +46,8 @@ const MyContentPage = () => {
     setError(null);
     
     try {
-      // Fetch conversations first
       await fetchConversations();
       
-      // Then fetch documents
       if (activeTab === 'documents') {
         await fetchDocuments();
       }
@@ -71,11 +71,9 @@ const MyContentPage = () => {
       
       const data = await response.json();
       
-      // Process conversation data
       const processedData = [];
       
       for (const conversation of data) {
-        // Format created date
         const createdDate = new Date(conversation.created_at);
         const day = String(createdDate.getDate()).padStart(2, '0');
         const month = String(createdDate.getMonth() + 1).padStart(2, '0');
@@ -83,10 +81,8 @@ const MyContentPage = () => {
         const hours = String(createdDate.getHours()).padStart(2, '0');
         const minutes = String(createdDate.getMinutes()).padStart(2, '0');
         
-        // Use title from DB as is
         conversation.displayTitle = conversation.title || `Conversation ${day}-${month}-${year} ${hours}:${minutes}`;
         
-        // Fetch conversation details to get answer count
         try {
           const detailsResponse = await fetch(`/api/user/conversation/${conversation.id}`, {
             credentials: 'include'
@@ -94,7 +90,6 @@ const MyContentPage = () => {
           
           if (detailsResponse.ok) {
             const details = await detailsResponse.json();
-            // Set answer count (divide by 2 because each Q/A pair counts as 2 items)
             conversation.answerCount = details.answers ? Math.floor(details.answers.length / 2) : 0;
           }
         } catch (error) {
@@ -133,7 +128,6 @@ const MyContentPage = () => {
   const handleTabChange = async (tab) => {
     setActiveTab(tab);
     
-    // If switching to documents tab and we haven't loaded them yet
     if (tab === 'documents' && documents.length === 0) {
       try {
         setIsLoading(true);
@@ -157,7 +151,6 @@ const MyContentPage = () => {
         throw new Error('Failed to load conversation');
       }
       
-      // Redirect to chat page
       navigate('/');
     } catch (error) {
       console.error('Error loading conversation:', error);
@@ -166,7 +159,6 @@ const MyContentPage = () => {
   };
 
   const handleLoadDocument = (id) => {
-    // Navigate to editor with document ID
     navigate(`/editor?document=${id}`);
   };
 
@@ -194,7 +186,6 @@ const MyContentPage = () => {
         throw new Error(`Failed to delete ${type}`);
       }
       
-      // Remove the deleted item from state
       if (type === 'document') {
         setDocuments(documents.filter(doc => doc.id !== id));
       } else if (type === 'conversation') {
@@ -210,145 +201,169 @@ const MyContentPage = () => {
     }
   };
 
-  // Function to safely display company description with improved handling
   const getCompanyDescription = (conversation) => {
     if (!conversation) return '';
     
-    // Check if company_description exists and is not empty
     if (conversation.company_description && typeof conversation.company_description === 'string') {
       const desc = conversation.company_description.trim();
       if (desc.length === 0) return 'No description available';
       
-      // Truncate if longer than 150 characters
       return desc.length > 150 ? desc.substring(0, 150).trim() + '...' : desc;
     }
     
     return 'No description available';
   };
 
+  const handleNavigation = (path) => {
+    navigate(path);
+  };
+
   return (
     <div className="app-container">
       <Header />
-      <div className="content-container">
-        <div className="user-content-container">
-          <h2>My Content</h2>
-          
-          <div className="tabs">
+      <div className="main-content">
+        <div className="container">
+          <div className="nav-container">
             <button 
-              className={activeTab === 'conversations' ? 'active' : ''}
-              onClick={() => handleTabChange('conversations')}
+              className="nav-button inactive" 
+              onClick={() => handleNavigation('/')}
             >
-              <FontAwesomeIcon icon={faComments} /> Conversations
+              Chat
             </button>
             <button 
-              className={activeTab === 'documents' ? 'active' : ''}
-              onClick={() => handleTabChange('documents')}
+              className="nav-button inactive" 
+              onClick={() => handleNavigation('/editor')}
             >
-              <FontAwesomeIcon icon={faFile} /> Documents
+              Editor
+            </button>
+            <button className="nav-button active">
+              My Content
             </button>
           </div>
           
-          {error && (
-            <div className="error-message">
-              {error}
+          <div className="content-wrapper">
+            <div className="my-content-header">
+              <h2>My Content</h2>
+              <div className="tabs">
+                <button 
+                  className={activeTab === 'conversations' ? 'active' : ''}
+                  onClick={() => handleTabChange('conversations')}
+                >
+                  <FontAwesomeIcon icon={faComments} /> Conversations
+                </button>
+                <button 
+                  className={activeTab === 'documents' ? 'active' : ''}
+                  onClick={() => handleTabChange('documents')}
+                >
+                  <FontAwesomeIcon icon={faFile} /> Documents
+                </button>
+              </div>
             </div>
-          )}
-          
-          {isLoading ? (
-            <div className="loading-spinner">
-              <FontAwesomeIcon icon={faSpinner} spin />
-              <span>Loading...</span>
-            </div>
-          ) : (
-            <div className="items-container">
-              {activeTab === 'conversations' && (
-                conversations.length > 0 ? (
-                  <div className="items-list">
-                    {conversations.map(conversation => (
-                      <div key={conversation.id} className="item-card">
-                        <div className="item-info">
-                          <h3>{conversation.displayTitle}</h3>
-                          <div className="item-details">
-                            <div className="company-description-container">
-                              <span className="detail-label">Company description:</span>
-                              <span className="detail-content">{getCompanyDescription(conversation)}</span>
+            
+            {error && (
+              <div className="error-message">
+                {error}
+              </div>
+            )}
+            
+            <div className="content-container">
+              {isLoading ? (
+                <div className="loading-spinner">
+                  <FontAwesomeIcon icon={faSpinner} spin />
+                  <span>Loading...</span>
+                </div>
+              ) : (
+                <div className="items-container">
+                  {activeTab === 'conversations' && (
+                    conversations.length > 0 ? (
+                      <div className="items-list">
+                        {conversations.map(conversation => (
+                          <div key={conversation.id} className="item-card">
+                            <div className="item-info">
+                              <h3>{conversation.displayTitle}</h3>
+                              <div className="item-details">
+                                <div className="company-description-container">
+                                  <span className="detail-label">Company description:</span>
+                                  <span className="detail-content">{getCompanyDescription(conversation)}</span>
+                                </div>
+                                <div className="additional-details">
+                                  <span className="detail">NACE Sector: {conversation.nace_sector || 'Not specified'}</span>
+                                  <span className="detail">Answers: {conversation.answerCount || 0}</span>
+                                </div>
+                              </div>
                             </div>
-                            <div className="additional-details">
-                              <span className="detail">NACE Sector: {conversation.nace_sector || 'Not specified'}</span>
-                              <span className="detail">Answers: {conversation.answerCount || 0}</span>
+                            <div className="item-actions">
+                              <button 
+                                className="action-button view-button"
+                                onClick={() => handleLoadConversation(conversation.id)}
+                                title="Continue conversation"
+                              >
+                                <FontAwesomeIcon icon={faEye} />
+                              </button>
+                              <button 
+                                className="action-button delete-button"
+                                onClick={() => confirmDelete('conversation', conversation.id)}
+                                title="Delete conversation"
+                              >
+                                <FontAwesomeIcon icon={faTrash} />
+                              </button>
                             </div>
                           </div>
-                        </div>
-                        <div className="item-actions">
-                          <button 
-                            className="action-button view-button"
-                            onClick={() => handleLoadConversation(conversation.id)}
-                            title="Continue conversation"
-                          >
-                            <FontAwesomeIcon icon={faEye} />
-                          </button>
-                          <button 
-                            className="action-button delete-button"
-                            onClick={() => confirmDelete('conversation', conversation.id)}
-                            title="Delete conversation"
-                          >
-                            <FontAwesomeIcon icon={faTrash} />
-                          </button>
-                        </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="empty-state">
-                    <p>You don't have any saved conversations yet.</p>
-                    <Link to="/" className="start-button">
-                      Start a new conversation
-                    </Link>
-                  </div>
-                )
-              )}
-              
-              {activeTab === 'documents' && (
-                documents.length > 0 ? (
-                  <div className="items-list">
-                    {documents.map(document => (
-                      <div key={document.id} className="item-card">
-                        <div className="item-info">
-                          <h3>{document.name}</h3>
-                          <div className="item-details">
-                            <span className="detail">Created: {new Date(document.created_at).toLocaleDateString()}</span>
+                    ) : (
+                      <div className="empty-state">
+                        <p>You don't have any saved conversations yet.</p>
+                        <Link to="/" className="start-button">
+                          Start a new conversation
+                        </Link>
+                      </div>
+                    )
+                  )}
+                  
+                  {activeTab === 'documents' && (
+                    documents.length > 0 ? (
+                      <div className="items-list">
+                        {documents.map(document => (
+                          <div key={document.id} className="item-card">
+                            <div className="item-info">
+                              <h3>{document.name}</h3>
+                              <div className="item-details">
+                                <span className="detail">Created: {new Date(document.created_at).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                            <div className="item-actions">
+                              <button 
+                                className="action-button view-button"
+                                onClick={() => handleLoadDocument(document.id)}
+                                title="Edit document"
+                              >
+                                <FontAwesomeIcon icon={faEdit} />
+                              </button>
+                              <button 
+                                className="action-button delete-button"
+                                onClick={() => confirmDelete('document', document.id)}
+                                title="Delete document"
+                              >
+                                <FontAwesomeIcon icon={faTrash} />
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                        <div className="item-actions">
-                          <button 
-                            className="action-button view-button"
-                            onClick={() => handleLoadDocument(document.id)}
-                            title="Edit document"
-                          >
-                            <FontAwesomeIcon icon={faEye} />
-                          </button>
-                          <button 
-                            className="action-button delete-button"
-                            onClick={() => confirmDelete('document', document.id)}
-                            title="Delete document"
-                          >
-                            <FontAwesomeIcon icon={faTrash} />
-                          </button>
-                        </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="empty-state">
-                    <p>You don't have any saved documents yet.</p>
-                    <Link to="/editor" className="start-button">
-                      Create a new document
-                    </Link>
-                  </div>
-                )
+                    ) : (
+                      <div className="empty-state">
+                        <p>You don't have any saved documents yet.</p>
+                        <Link to="/editor" className="start-button">
+                          Create a new document
+                        </Link>
+                      </div>
+                    )
+                  )}
+                </div>
               )}
             </div>
-          )}
+          </div>
           
           {deleteItem && (
             <div className="delete-modal">

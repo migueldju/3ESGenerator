@@ -20,7 +20,6 @@ const UserProfilePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Get CSRF token
         const csrfResponse = await fetch('/api/get-csrf-token', {
           method: 'GET',
           credentials: 'include'

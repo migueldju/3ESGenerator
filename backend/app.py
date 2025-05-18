@@ -73,16 +73,13 @@ from models import User, Conversation, Answer, Document
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-api_key = os.environ.get('NVIDIA_API_KEY')
-if not api_key:
-    api_key = "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"
+api_key = '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'
 
 client = OpenAI(
     base_url="https://integrate.api.nvidia.com/v1",
     api_key=api_key
 )
 
-# Load vectorstore function
 def load_vectorstore(db_folder):
     db_path = os.path.join("vectorstores", db_folder)
     
@@ -111,7 +108,7 @@ def get_llm_response(prompt):
             model="nvidia/llama-3.3-nemotron-super-49b-v1",
             messages=[{"role": "system", "content": "Be brief."
             "Only return the most COMPLETE and accurate answer. "
-            "Avoid explanations, introductions, and additional context. "
+            "Avoid introductions, and additional context. "
             "No need to introduce a summary at the end. "},
                     {"role": "user", "content": prompt}],
             temperature=0,
@@ -180,18 +177,15 @@ nace_chain = load_chain(nace_vs)
 
 
 def generate_csrf_token():
-    """Generate a CSRF token for form protection"""
     if 'csrf_token' not in session:
         session['csrf_token'] = hashlib.sha256(os.urandom(64)).hexdigest()
     return session['csrf_token']
 
 def validate_csrf_token(token):
-    """Validate the CSRF token from a form submission"""
     return token and 'csrf_token' in session and token == session['csrf_token']
 
 app.jinja_env.globals['csrf_token'] = generate_csrf_token
 
-# Routes
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
@@ -203,12 +197,9 @@ def serve(path):
 @app.route('/chat', methods=['POST'])
 @limiter.limit("30 per minute")
 def chat():
-    if(current_user is not None and current_user.is_authenticated):
-        print("User is authenticated")
     user_message = request.form['message']
     app.logger.info(f"Chat message received. Session data: {dict(session)}")
     
-    # Obtener o crear conversation_id único por sesión
     conversation_id = session.get('conversation_id')
     
     if 'initialized' not in session:
@@ -220,9 +211,7 @@ def chat():
         session['nace_sector'] = result['nace_sector']
         session['esrs_sector'] = result['esrs_sector']
         
-        # Verificar si ya existe una conversación en esta sesión
         if not conversation_id:
-            # Check if user is authenticated before creating the conversation
             current_user_id = current_user.id if current_user.is_authenticated else None
             app.logger.info(f"Creating new conversation for user_id: {current_user_id}")
             
@@ -236,17 +225,14 @@ def chat():
             db.session.add(conversation)
             db.session.commit()
             
-            # Guardar el ID de la conversación en la sesión
             session['conversation_id'] = conversation.id
             conversation_id = conversation.id
         
-        # Crear historia de conversación si no existe
         if 'conversation_history' not in session:
             session['conversation_history'] = []
         
         session.modified = True
         
-        # Guardar la primera respuesta
         answer = Answer(
             conversation_id=conversation_id,
             question=user_message,
@@ -266,14 +252,12 @@ def chat():
         response = process_question(user_message)
         response_data = response.get_json()
         
-        # Actualizar historial de conversación
         conversation_history = session.get('conversation_history', [])
         conversation_history.append(f"Q: {user_message}")
         conversation_history.append(f"A: {response_data['answer']}")
         session['conversation_history'] = conversation_history
         session.modified = True
         
-        # Guardar en la base de datos
         if conversation_id:
             answer = Answer(
                 conversation_id=conversation_id,
@@ -288,7 +272,6 @@ def chat():
 
 @app.route('/chat/get_conversation', methods=['GET'])
 def get_conversation():
-    """Get the current conversation state"""
     app.logger.info("Getting conversation")
     
     if 'initialized' not in session:
@@ -303,7 +286,6 @@ def get_conversation():
     conversation_id = session.get('conversation_id')
     
     if conversation_id:
-        # Obtener mensajes desde la base de datos
         conversation = Conversation.query.filter_by(id=conversation_id).first()
         if conversation:
             answers = Answer.query.filter_by(conversation_id=conversation_id).order_by(Answer.created_at).all()
@@ -311,7 +293,6 @@ def get_conversation():
                 messages.append({'type': 'user', 'content': answer.question})
                 messages.append({'type': 'bot', 'content': answer.answer})
     else:
-        # Fallback al historial de sesión
         conversation_history = session.get('conversation_history', [])
         for i in range(0, len(conversation_history), 2):
             if i < len(conversation_history) and conversation_history[i].startswith('Q: '):
@@ -335,7 +316,6 @@ def get_conversation():
 
 @app.route('/chat/debug/conversation', methods=['GET'])
 def debug_conversation():
-    """Debug endpoint to see conversation state"""
     conversation_id = session.get('conversation_id')
     data = {
         'session_keys': list(session.keys()),
@@ -368,10 +348,9 @@ def debug_conversation():
     
     return jsonify(data)
 
-# Make sure session configuration is correct
 app.config['SESSION_COOKIE_NAME'] = 'session'
 app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+app.config['SESSION_COOKIE_SECURE'] = False  
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
     
 @app.route('/check_session', methods=['GET'])
@@ -412,7 +391,6 @@ def save_content():
 @app.route('/reset', methods=['POST'])
 def reset_session():
     try:
-        # Limpiar todo el estado de la sesión
         session.clear()
         app.logger.info("Session cleared for reset")
         return jsonify({'status': 'success'})
@@ -423,9 +401,7 @@ def reset_session():
 @app.route('/chat/load_conversation/<int:conversation_id>', methods=['POST'])
 @login_required
 def load_conversation(conversation_id):
-    """Cargar una conversación específica del usuario"""
     try:
-        # Verificar que la conversación pertenezca al usuario actual
         conversation = Conversation.query.filter_by(
             id=conversation_id, 
             user_id=current_user.id
@@ -434,14 +410,12 @@ def load_conversation(conversation_id):
         if not conversation:
             return jsonify({'error': 'Conversation not found'}), 404
         
-        # Guardar la conversación en la sesión
         session['conversation_id'] = conversation.id
         session['initialized'] = True
         session['company_desc'] = conversation.company_description
         session['nace_sector'] = conversation.nace_sector
         session['esrs_sector'] = conversation.esrs_sector
         
-        # Cargar los mensajes
         answers = Answer.query.filter_by(conversation_id=conversation_id).order_by(Answer.created_at).all()
         messages = []
         for answer in answers:
@@ -467,33 +441,28 @@ def load_conversation(conversation_id):
 
 @app.route('/chat/save_for_later', methods=['POST'])
 def save_conversation_for_later():
-    """Guardar la conversación actual para más tarde"""
     try:
         conversation_id = session.get('conversation_id')
         
         if not conversation_id:
             return jsonify({'error': 'No active conversation'}), 400
         
-        # Si el usuario está registrado, actualizar el título de la conversación
         if current_user.is_authenticated:
             conversation = Conversation.query.filter_by(id=conversation_id).first()
             if conversation:
-                # Actualizar el título si se proporciona
                 data = request.json
                 if data and 'title' in data:
                     conversation.title = data['title']
                     db.session.commit()
         
-        # Para usuarios no registrados, la conversación se mantiene solo durante la sesión
         return jsonify({'success': True, 'message': 'Conversation saved for later'})
         
     except Exception as e:
         app.logger.error(f"Error saving conversation: {str(e)}")
         return jsonify({'error': 'Failed to save conversation'}), 500
 
-# Authentication routes
 @app.route('/register', methods=['POST'])
-@limiter.exempt  # Exempt from rate limiting for development
+@limiter.exempt  
 def register():
     try:
         data = request.json
@@ -501,47 +470,37 @@ def register():
         if not data or not data.get('username') or not data.get('email') or not data.get('password'):
             return jsonify({'message': 'Missing required fields'}), 400
         
-        # Validate email format
         email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if not re.match(email_pattern, data['email']):
             return jsonify({'message': 'Invalid email format'}), 400
         
-        # Password strength check
         if len(data['password']) < 8:
             return jsonify({'message': 'Password must be at least 8 characters long'}), 400
         
-        # Check if user with email already exists
         if User.query.filter_by(email=data['email']).first():
             app.logger.info(f"Registration attempt with existing email: {data['email']}")
             return jsonify({'message': 'Email already registered'}), 400
         
-        # Check if username is taken
         if User.query.filter_by(username=data['username']).first():
             return jsonify({'message': 'Username already taken'}), 400
         
-        # Create new user
         user = User(
             username=data['username'],
             email=data['email']
         )
         
-        # Set password
         user.set_password(data['password'])
         
-        # Generate verification token
         user.verification_token = str(uuid.uuid4())
         
-        # Save user to database
         db.session.add(user)
         db.session.commit()
         
-        # Send verification email
         try:
             verification_url = url_for('verify_email', token=user.verification_token, _external=True)
             email_service.send_verification_email(user, verification_url)
         except Exception as email_error:
             app.logger.warning(f"Failed to send verification email: {str(email_error)}")
-            # Continue registration process even if email fails
         
         app.logger.info(f"New user registered: {user.username}")
         return jsonify({'message': 'User registered successfully. Please check your email to verify your account.'}), 201
@@ -556,7 +515,6 @@ def verify_email(token):
         user = User.query.filter_by(verification_token=token).first()
         
         if not user:
-            # Check if the user already exists with no verification token (already verified)
             user_by_email = User.query.filter(User.verification_token.is_(None), User.is_verified == True).first()
             
             if user_by_email:
@@ -566,7 +524,6 @@ def verify_email(token):
                 app.logger.warning(f"Invalid verification token: {token[:8]}...")
                 return jsonify({'message': 'Invalid verification token'}), 400
         
-        # If we found the user and they're not verified yet
         if not user.is_verified:
             user.is_verified = True
             user.verification_token = None
@@ -574,7 +531,6 @@ def verify_email(token):
             app.logger.info(f"Email verified for user: {user.username}")
             return jsonify({'message': 'Email verified successfully. You can now log in.'}), 200
         else:
-            # User is already verified but token hasn't been cleared yet
             user.verification_token = None
             db.session.commit()
             app.logger.info(f"Clearing token for already verified user: {user.username}")
@@ -585,7 +541,7 @@ def verify_email(token):
         return jsonify({'message': 'An error occurred during verification'}), 500
 
 @app.route('/login', methods=['POST'])
-@limiter.exempt  # Exempt from rate limiting for development
+@limiter.exempt  
 def login():
     try:
         data = request.json
@@ -595,7 +551,6 @@ def login():
         
         user = User.query.filter_by(email=data['email']).first()
         
-        # Always take the same time to respond whether user exists or not (to prevent timing attacks)
         if not user or not user.check_password(data['password']):
             app.logger.warning(f"Failed login attempt for email: {data.get('email')}")
             return jsonify({'message': 'Invalid email or password'}), 401
@@ -610,7 +565,7 @@ def login():
         conversation_id = session.get('conversation_id')
         if conversation_id:
             conversation = Conversation.query.filter_by(id=conversation_id).first()
-            if conversation.user_id is None:
+            if conversation and conversation.user_id is None:
                 conversation.user_id = user.id
                 db.session.commit()
                 app.logger.info(f"Associated conversation {conversation_id} with user {user.username}")
@@ -644,27 +599,20 @@ def delete_account():
         user_id = current_user.id
         username = current_user.username
         
-        # Desconectar al usuario primero
         logout_user()
         
-        # Eliminar todos los datos relacionados con el usuario
         conversations = Conversation.query.filter_by(user_id=user_id).all()
         for conversation in conversations:
-            # Eliminar respuestas asociadas
             Answer.query.filter_by(conversation_id=conversation.id).delete()
         
-        # Eliminar conversaciones
         Conversation.query.filter_by(user_id=user_id).delete()
         
-        # Eliminar documentos
         Document.query.filter_by(user_id=user_id).delete()
         
-        # Finalmente eliminar al usuario
         user = User.query.get(user_id)
         db.session.delete(user)
         db.session.commit()
         
-        # Limpiar la sesión
         session.clear()
         
         app.logger.info(f"User deleted successfully: {username}")
@@ -690,7 +638,6 @@ def check_auth():
         return jsonify({'isAuthenticated': False}), 200
 
 @app.route('/forgot-password', methods=['POST'])
-# @limiter.limit("5 per hour")
 def forgot_password():
     data = request.json
     
@@ -699,17 +646,14 @@ def forgot_password():
     
     user = User.query.filter_by(email=data['email']).first()
     
-    # Always return success even if user not found (security)
     if not user:
         app.logger.info(f"Password reset requested for non-existent email: {data.get('email')}")
         return jsonify({'message': 'If your email is registered, you will receive a reset link'}), 200
     
-    # Generate reset token
     user.reset_token = str(uuid.uuid4())
     user.reset_token_expiry = datetime.utcnow() + timedelta(hours=1)
     db.session.commit()
     
-    # Send password reset email
     reset_url = url_for('reset_password_page', token=user.reset_token, _external=True)
     email_service.send_password_reset_email(user, reset_url)
     
@@ -724,19 +668,14 @@ def reset_password_page(token):
         app.logger.warning(f"Invalid password reset attempt with token: {token}")
         return jsonify({'message': 'Invalid or expired reset token'}), 400
     
-    # Return the main index.html for React to handle
     return send_from_directory(app.template_folder, 'index.html')
 
 @app.route('/reset-password', methods=['POST'])
-# @limiter.limit("5 per hour")
 def reset_password():
     data = request.json
     
     if not data or not data.get('token') or not data.get('password'):
         return jsonify({'message': 'Missing required fields'}), 400
-    
-    # CSRF token validation is removed since React handles CSRF differently
-    # and we're using credentials: 'include' in the frontend
     
     user = User.query.filter_by(reset_token=data['token']).first()
     
@@ -744,7 +683,6 @@ def reset_password():
         app.logger.warning(f"Invalid password reset attempt with token: {data.get('token')}")
         return jsonify({'message': 'Invalid or expired reset token'}), 400
     
-    # Password strength check
     if len(data['password']) < 8:
         return jsonify({'message': 'Password must be at least 8 characters long'}), 400
     
@@ -756,7 +694,6 @@ def reset_password():
     app.logger.info(f"Password reset successful for user: {user.username}")
     return jsonify({'message': 'Password reset successful. You can now log in.'}), 200
 
-# User profile routes
 @app.route('/user/profile', methods=['GET'])
 @login_required
 def get_user_profile():
@@ -772,7 +709,6 @@ def get_user_profile():
 def update_user_profile():
     data = request.json
     
-    # Validate CSRF token
     if not validate_csrf_token(data.get('csrf_token')):
         app.logger.warning("CSRF token validation failed in profile update")
         return jsonify({'message': 'Invalid request'}), 403
@@ -784,7 +720,6 @@ def update_user_profile():
         if existing_user:
             return jsonify({'message': 'Username already taken'}), 400
             
-        # Validar longitud de username
         if len(data['username']) < 3:
             return jsonify({'message': 'Username must be at least 3 characters'}), 400
             
@@ -801,7 +736,6 @@ def update_user_profile():
         if len(data['password']) < 8:
             return jsonify({'message': 'Password must be at least 8 characters long'}), 400
         
-        # Verify current password
         if not current_user.check_password(data.get('current_password', '')):
             app.logger.warning(f"Failed password change attempt for user: {current_user.username}")
             return jsonify({'message': 'Current password is incorrect'}), 400
@@ -815,7 +749,6 @@ def update_user_profile():
 
 @app.route('/get-csrf-token', methods=['GET'])
 def get_csrf_token():
-    """Provide CSRF token to the frontend"""
     return jsonify({'csrf_token': generate_csrf_token()})
 
 
@@ -873,10 +806,8 @@ def delete_conversation(conversation_id):
     if not conversation:
         return jsonify({'message': 'Conversation not found'}), 404
     
-    # Delete all answers associated with this conversation
     Answer.query.filter_by(conversation_id=conversation_id).delete()
     
-    # Delete the conversation
     db.session.delete(conversation)
     db.session.commit()
     
@@ -1028,6 +959,7 @@ def process_question(question):
     - Use the context provided for reference.
     - No need to include summary tables
     - Answer must be complete and accurate
+    - Explain the answer in detail
     - Give brief and concise answers
     - Prioritize information quality over aesthetics
     - Don't show tables, only plain text
