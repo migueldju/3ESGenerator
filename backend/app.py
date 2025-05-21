@@ -402,6 +402,7 @@ def reset_session():
 @login_required
 def load_conversation(conversation_id):
     try:
+        # Verificar que la conversación pertenece al usuario actual
         conversation = Conversation.query.filter_by(
             id=conversation_id, 
             user_id=current_user.id
@@ -410,12 +411,15 @@ def load_conversation(conversation_id):
         if not conversation:
             return jsonify({'error': 'Conversation not found'}), 404
         
+        # Guardar información de la conversación en la sesión
+        session.clear()  # Limpiar sesión actual para evitar mezclar datos
         session['conversation_id'] = conversation.id
         session['initialized'] = True
         session['company_desc'] = conversation.company_description
         session['nace_sector'] = conversation.nace_sector
         session['esrs_sector'] = conversation.esrs_sector
         
+        # Cargar mensajes de la conversación
         answers = Answer.query.filter_by(conversation_id=conversation_id).order_by(Answer.created_at).all()
         messages = []
         for answer in answers:
@@ -562,6 +566,7 @@ def login():
         
         session.regenerate()
         
+        # Asociar la conversación actual al usuario si existe
         conversation_id = session.get('conversation_id')
         if conversation_id:
             conversation = Conversation.query.filter_by(id=conversation_id).first()
@@ -759,12 +764,17 @@ def get_user_conversations():
     
     result = []
     for conversation in conversations:
+        # Contar respuestas para esta conversación
+        answer_count = Answer.query.filter_by(conversation_id=conversation.id).count() // 2
+        
         result.append({
             'id': conversation.id,
             'title': conversation.title,
             'nace_sector': conversation.nace_sector,
             'esrs_sector': conversation.esrs_sector,
-            'created_at': conversation.created_at.isoformat()
+            'created_at': conversation.created_at.isoformat(),
+            'answer_count': answer_count,
+            'company_description': conversation.company_description[:150] + '...' if conversation.company_description and len(conversation.company_description) > 150 else conversation.company_description
         })
     
     return jsonify(result), 200
@@ -844,6 +854,31 @@ def get_document_content(document_id):
         'created_at': document.created_at.isoformat()
     }), 200
 
+@app.route('/user/load_document/<int:document_id>', methods=['POST'])
+@login_required
+def load_document_for_editing(document_id):
+    try:
+        document = Document.query.filter_by(
+            id=document_id, 
+            user_id=current_user.id
+        ).first()
+        
+        if not document:
+            return jsonify({'error': 'Document not found'}), 404
+        
+        return jsonify({
+            'success': True,
+            'document': {
+                'id': document.id,
+                'name': document.name,
+                'content': document.content,
+                'created_at': document.created_at.isoformat()
+            }
+        })
+    except Exception as e:
+        app.logger.error(f"Error loading document: {str(e)}")
+        return jsonify({'error': 'Failed to load document'}), 500
+    
 @app.route('/user/document/<int:document_id>', methods=['PUT'])
 @login_required
 def update_document(document_id):

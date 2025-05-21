@@ -1,0 +1,299 @@
+.auth-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .auth-modal-content {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 450px;
+    animation: slide-down 0.3s ease;
+  }
+  
+  @keyframes slide-down {
+    from {
+      opacity: 0;
+      transform: translateY(-50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .auth-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e1e4e8;
+  }
+  
+  .auth-modal-header h2 {
+    margin: 0;
+    color: #2a66b3;
+    font-size: 1.5rem;
+  }
+  
+  .close-button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+  }
+  
+  .close-button:hover {
+    color: #333;
+  }
+  
+  .auth-modal-body {
+    padding: 20px;
+  }
+  
+  .form-group {
+    margin-bottom: 16px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #333;
+  }
+  
+  .form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border-color 0.2s;
+  }
+  
+  .form-group input:focus {
+    outline: none;
+    border-color: #2a66b3;
+    box-shadow: 0 0 0 2px rgba(42, 102, 179, 0.2);
+  }
+  
+  .auth-submit-button {
+    width: 100%;
+    padding: 12px;
+    background-color: #2a66b3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .auth-submit-button:hover {
+    background-color: #3e8ed0;
+  }
+  
+  .auth-submit-button:disabled {
+    background-color: #a0b5d5;
+    cursor: not-allowed;
+  }
+  
+  .auth-links {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .text-button {
+    background: none;
+    border: none;
+    color: #2a66b3;
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: underline;
+  }
+  
+  .text-button:hover {
+    color: #3e8ed0;
+  }
+  
+  .auth-error-message {
+    background-color: #fdeded;
+    color: #e53e3e;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    border-left: 4px solid #e53e3e;
+  }
+  
+  .auth-success-message {
+    background-color: #f0fff4;
+    color: #38a169;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    border-left: 4px solid #38a169;
+  }
+  
+  /* Media Queries */
+  @media (max-width: 480px) {
+    .auth-modal-content {
+      width: 95%;
+    }
+    
+    .auth-modal-header h2 {
+      font-size: 1.3rem;
+    }
+    
+    .form-group input,
+    .auth-submit-button {
+      padding: 8px;
+      font-size: 14px;
+    }
+  }
+  
+  /* frontend/src/styles/AuthButton.css */
+  .auth-container {
+    position: relative;
+  }
+  
+  .auth-buttons {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .login-button,
+  .register-button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .login-button {
+    background-color: transparent;
+    border: 1px solid #fff;
+    color: #fff;
+  }
+  
+  .login-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .register-button {
+    background-color: #fff;
+    border: 1px solid #fff;
+    color: #2a66b3;
+  }
+  
+  .register-button:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .user-menu {
+    position: relative;
+  }
+  
+  .user-button {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid #fff;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .user-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  .user-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 5px;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    min-width: 150px;
+    z-index: 100;
+  }
+  
+  .dropdown-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 15px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #333;
+    transition: background-color 0.2s;
+  }
+  
+  .dropdown-item:hover {
+    background-color: #f5f7fa;
+  }
+
+  .auth-buttons {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .login-button,
+  .register-button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .login-button {
+    background-color: transparent;
+    border: 1px solid #fff;
+    color: #fff;
+  }
+  
+  .login-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .register-button {
+    background-color: #fff;
+    border: 1px solid #fff;
+    color: #2a66b3;
+  }
+  
+  .register-button:hover {
+    background-color: #f0f0f0;
+  }
+  
+  /* Media Queries */
+  @media (max-width: 600px) {
+    .login-button,
+    .register-button,
+    .user-button {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+  }

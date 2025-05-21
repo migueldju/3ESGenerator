@@ -22,14 +22,10 @@ const EditorView = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [documentId, setDocumentId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [useFilePicker, setUseFilePicker] = useState(false);
+  const [isEdited, setIsEdited] = useState(false);
   const quillRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
-
-  useEffect(() => {
-    setUseFilePicker('showSaveFilePicker' in window);
-  }, []);
 
   useEffect(() => {
     checkAuthStatus();
@@ -45,7 +41,6 @@ const EditorView = () => {
 
   const checkAuthStatus = async () => {
     try {
-      console.log('Checking auth status from editor...');
       const response = await fetch('/api/check-auth', {
         method: 'GET',
         credentials: 'include',
@@ -56,7 +51,6 @@ const EditorView = () => {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('Auth status response:', data);
         setIsLoggedIn(data.isAuthenticated);
       }
     } catch (error) {
@@ -79,6 +73,7 @@ const EditorView = () => {
       setContent(data.content);
       setDocumentTitle(data.name);
       setDocumentId(data.id);
+      setIsEdited(false); // Reset edit state when loading
     } catch (error) {
       console.error('Error loading document:', error);
       setStatusMessage('Failed to load document. Please try again.');
@@ -89,10 +84,16 @@ const EditorView = () => {
   };
 
   const handleNavigation = (path) => {
-    navigate(path);
+    // Check if there are unsaved changes before navigating
+    if (isEdited) {
+      if (window.confirm('You have unsaved changes. Are you sure you want to leave?')) {
+        navigate(path);
+      }
+    } else {
+      navigate(path);
+    }
   };
 
-  // Rest of the code...
   const modules = {
     toolbar: [
       [{ 'header': [1, 2, 3, false] }],
@@ -100,7 +101,7 @@ const EditorView = () => {
       [{ 'list': 'ordered' }, { 'list': 'bullet' }],
       [{ 'indent': '-1' }, { 'indent': '+1' }],
       [{ 'align': [] }],
-      [{ 'link': [] }],
+      ['link'],
       [{'color': [] }, { 'background': [] }],
       ['clean']
     ]
@@ -118,10 +119,12 @@ const EditorView = () => {
 
   const handleContentChange = (value) => {
     setContent(value);
+    setIsEdited(true);
   };
 
   const handleTitleChange = (e) => {
     setDocumentTitle(e.target.value);
+    setIsEdited(true);
   };
 
   const handleFormatChange = (e) => {
@@ -175,6 +178,7 @@ const EditorView = () => {
         }
         
         setStatusMessage('Document updated successfully.');
+        setIsEdited(false);
       } else {
         // Create new document
         const formData = new FormData();
@@ -195,9 +199,12 @@ const EditorView = () => {
         const data = await response.json();
         if (data.document_id) {
           setDocumentId(data.document_id);
+          // Update URL to include document ID
+          window.history.replaceState(null, '', `/editor?document=${data.document_id}`);
         }
         
         setStatusMessage('Document saved successfully.');
+        setIsEdited(false);
       }
     } catch (error) {
       console.error('Error saving document:', error);
@@ -208,7 +215,6 @@ const EditorView = () => {
     }
   };
 
-  // Función para manejar la exportación
   const handleExport = async () => {
     if (!content.trim()) {
       setStatusMessage('Cannot download empty content.');
@@ -250,7 +256,6 @@ const EditorView = () => {
       const delta = quill.getContents();
       const pdfBlob = await pdfExporter.generatePdf(delta);
       
-      // Usar directamente saveAs para asegurar que se muestre el indicador de descarga
       saveAs(pdfBlob, `${documentTitle || 'ESGenerator_Report'}.pdf`);
       
       return true;
@@ -265,14 +270,12 @@ const EditorView = () => {
       const quill = quillRef.current.getEditor();
       const delta = quill.getContents();
       
-      // Usar opciones adecuadas para la generación de DOCX
       const options = {
         exportAs: 'blob'
       };
       
       const docBlob = await generateWord(delta, options);
       
-      // Usar directamente saveAs con el tipo MIME correcto
       saveAs(docBlob, `${documentTitle || 'ESGenerator_Report'}.docx`, {
         type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
       });
@@ -286,15 +289,12 @@ const EditorView = () => {
   
   const exportToTXT = async () => {
     try {
-      // Extraer texto plano del contenido HTML
       const tempElement = document.createElement('div');
       tempElement.innerHTML = content;
       const plainText = tempElement.textContent || tempElement.innerText || '';
       
-      // Crear blob con el texto plano
       const blob = new Blob([plainText], { type: 'text/plain;charset=utf-8' });
       
-      // Usar directamente saveAs para que se muestre el indicador de descarga
       saveAs(blob, `${documentTitle || 'ESGenerator_Report'}.txt`);
       
       return true;
@@ -304,50 +304,22 @@ const EditorView = () => {
     }
   };
 
-  
-  
-
-  // Function to save file using File System Access API
-  const saveWithFilePicker = async (blob, suggestedName, mimeType) => {
-    try {
-      // Define options for the file picker
-      const options = {
-        suggestedName: suggestedName,
-        types: [{
-          description: 'Document',
-          accept: {
-            [mimeType]: [`.${suggestedName.split('.').pop()}`]
-          }
-        }]
-      };
-      
-      // Show the file picker
-      const fileHandle = await window.showSaveFilePicker(options);
-      
-      // Create a writable stream
-      const writable = await fileHandle.createWritable();
-      
-      // Write the blob to the file
-      await writable.write(blob);
-      
-      // Close the file and write the contents to disk
-      await writable.close();
-      
-      return true;
-    } catch (error) {
-      // User canceled the save dialog or another error occurred
-      console.error('Error in file picker:', error);
-      
-      // If user canceled, don't throw error, just fall back to regular download
-      if (error.name !== 'AbortError') {
-        throw error;
+  // Detectar intento de salir con cambios no guardados
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isEdited) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
       }
-      
-      // Fall back to saveAs for aborted picker or unsupported browsers
-      saveAs(blob, suggestedName);
-      return false;
-    }
-  };
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isEdited]);
 
   if (isLoading) {
     return (
@@ -399,7 +371,7 @@ const EditorView = () => {
               />
               {isLoggedIn && (
                 <button 
-                  className="save-button"
+                  className={`save-button ${isEdited ? 'needs-save' : ''}`}
                   onClick={handleSaveDocument}
                   disabled={isSaving}
                 >
@@ -409,7 +381,7 @@ const EditorView = () => {
                     </>
                   ) : (
                     <>
-                      <FontAwesomeIcon icon={faSave} /> Save
+                      <FontAwesomeIcon icon={faSave} /> {isEdited ? "Save*" : "Save"}
                     </>
                   )}
                 </button>
