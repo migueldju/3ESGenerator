@@ -198,15 +198,11 @@ def serve(path):
 @limiter.limit("30 per minute")
 def chat():
     user_message = request.form['message']
-    conversation_id = request.form.get('conversation_id')
+    app.logger.info(f"Chat message received. Session data: {dict(session)}")
     
-    app.logger.info(f"Chat message received. Session initialized: {'initialized' in session}, Conversation ID: {conversation_id}")
-    
-    # If we have a conversation_id but session is not initialized, this might be a page refresh
-    # Don't automatically load - let the frontend handle this explicitly
+    conversation_id = session.get('conversation_id')
     
     if 'initialized' not in session:
-        # First message - company description
         company_desc = user_message
         result = process_company_description(company_desc)
         
@@ -214,17 +210,13 @@ def chat():
         session['company_desc'] = company_desc
         session['nace_sector'] = result['nace_sector']
         session['esrs_sector'] = result['esrs_sector']
-        session['conversation_history'] = [
-            f"Company description: {company_desc}",
-            f"ESRS standards to follow: {'Agnostic Standards' if result['esrs_sector'] == 'Agnostic' else f'Agnostic Standards + {result['esrs_sector']}'}"
-        ]
         
-        session.permanent = True
-        session.modified = True
-        
-        if current_user.is_authenticated:
+        if not conversation_id:
+            current_user_id = current_user.id if current_user.is_authenticated else None
+            app.logger.info(f"Creating new conversation for user_id: {current_user_id}")
+            
             conversation = Conversation(
-                user_id=current_user.id,
+                user_id=current_user_id,
                 nace_sector=result['nace_sector'],
                 title="Conversation " + datetime.now().strftime("%Y-%m-%d %H:%M"),
                 esrs_sector=result['esrs_sector'],
@@ -232,82 +224,95 @@ def chat():
             )
             db.session.add(conversation)
             db.session.commit()
+            
             session['conversation_id'] = conversation.id
+            conversation_id = conversation.id
+        
+        if 'conversation_history' not in session:
+            session['conversation_history'] = []
+        
+        session.modified = True
+        
+        answer = Answer(
+            conversation_id=conversation_id,
+            question=user_message,
+            answer=f"Thank you for your company description. Based on my analysis, your company falls under NACE sector {result['nace_sector']}. How can I help you with your ESRS reporting requirements?"
+        )
+        db.session.add(answer)
+        db.session.commit()
         
         return jsonify({
             'answer': f"Thank you for your company description. Based on my analysis, your company falls under NACE sector {result['nace_sector']}. How can I help you with your ESRS reporting requirements?",
             'context': '',
             'is_first_message': True,
             'nace_sector': result['nace_sector'],
-            'esrs_sector': result['esrs_sector'],
-            'conversation_id': session.get('conversation_id')
+            'esrs_sector': result['esrs_sector']
         })
     else:
-        # Continue existing conversation
         response = process_question(user_message)
-        
-        # Save the new Q&A to database if conversation exists
-        if current_user.is_authenticated and session.get('conversation_id'):
-            try:
-                response_data = response.get_json()
-                answer_record = Answer(
-                    conversation_id=session['conversation_id'],
-                    question=user_message,
-                    answer=response_data['answer']
-                )
-                db.session.add(answer_record)
-                
-                # Update conversation timestamp
-                conversation = Conversation.query.get(session['conversation_id'])
-                if conversation:
-                    conversation.updated_at = datetime.utcnow()
-                
-                db.session.commit()
-            except Exception as e:
-                app.logger.error(f"Error saving answer to database: {str(e)}")
-                db.session.rollback()
-        
-        session.modified = True
         response_data = response.get_json()
-        response_data['conversation_id'] = session.get('conversation_id')
-        return jsonify(response_data)
-
+        
+        conversation_history = session.get('conversation_history', [])
+        conversation_history.append(f"Q: {user_message}")
+        conversation_history.append(f"A: {response_data['answer']}")
+        session['conversation_history'] = conversation_history
+        session.modified = True
+        
+        if conversation_id:
+            answer = Answer(
+                conversation_id=conversation_id,
+                question=user_message,
+                answer=response_data['answer']
+            )
+            db.session.add(answer)
+            db.session.commit()
+        
+        return response
 
 
 @app.route('/chat/get_conversation', methods=['GET'])
-def get_current_conversation():
-    """Get the current session conversation"""
-    if 'initialized' in session:
-        response_data = {
-            'initialized': True,
-            'nace_sector': session.get('nace_sector', ''),
-            'esrs_sector': session.get('esrs_sector', ''),
-            'company_desc': session.get('company_desc', ''),
-            'conversation_id': session.get('conversation_id')
-        }
-        
-        # If there's conversation history, convert it to messages format
-        conversation_history = session.get('conversation_history', [])
-        if conversation_history and len(conversation_history) > 2:
-            messages = [{
-                'type': 'bot',
-                'content': f'<h2>Welcome back to ESGenerator</h2><p>Company: {session.get("company_desc", "")}</p><p>NACE Sector: {session.get("nace_sector", "")}</p><p>ESRS Standards: {session.get("esrs_sector", "")}</p>',
-                'isWelcome': True
-            }]
-            
-            # Skip the first two items (company description and ESRS standards)
-            for i in range(2, len(conversation_history), 2):
-                if i + 1 < len(conversation_history):
-                    question = conversation_history[i].replace('Q: ', '')
-                    answer = conversation_history[i + 1].replace('A: ', '')
-                    messages.append({'type': 'user', 'content': question})
-                    messages.append({'type': 'bot', 'content': answer})
-            
-            response_data['messages'] = messages
-        
-        return jsonify(response_data)
+def get_conversation():
+    app.logger.info("Getting conversation")
     
-    return jsonify({'initialized': False})
+    if 'initialized' not in session:
+        return jsonify({
+            'initialized': False,
+            'nace_sector': 'Not classified yet',
+            'esrs_sector': 'Not determined yet',
+            'messages': []
+        })
+    
+    messages = []
+    conversation_id = session.get('conversation_id')
+    
+    if conversation_id:
+        conversation = Conversation.query.filter_by(id=conversation_id).first()
+        if conversation:
+            answers = Answer.query.filter_by(conversation_id=conversation_id).order_by(Answer.created_at).all()
+            for answer in answers:
+                messages.append({'type': 'user', 'content': answer.question})
+                messages.append({'type': 'bot', 'content': answer.answer})
+    else:
+        conversation_history = session.get('conversation_history', [])
+        for i in range(0, len(conversation_history), 2):
+            if i < len(conversation_history) and conversation_history[i].startswith('Q: '):
+                messages.append({
+                    'type': 'user', 
+                    'content': conversation_history[i][3:]
+                })
+            if i + 1 < len(conversation_history) and conversation_history[i+1].startswith('A: '):
+                messages.append({
+                    'type': 'bot', 
+                    'content': conversation_history[i+1][3:]
+                })
+    
+    return jsonify({
+        'initialized': True,
+        'nace_sector': session.get('nace_sector', ''),
+        'esrs_sector': session.get('esrs_sector', ''),
+        'messages': messages,
+        'company_desc': session.get('company_desc', '')
+    })
 
 @app.route('/chat/debug/conversation', methods=['GET'])
 def debug_conversation():
@@ -366,22 +371,46 @@ def save_content():
         return jsonify({'status': 'error', 'message': 'Invalid CSRF token'}), 403
         
     content = request.form.get('content', '')
-    name = request.form.get('name', f"ESRS Report {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    document_id = request.form.get('document_id')
     
-    document = Document(
-        user_id=current_user.id,
-        name=name,
-        content=content
-    )
-    db.session.add(document)
-    db.session.commit()
-    
-    app.logger.info(f"Content saved by user {current_user.id}")
-    return jsonify({
-        'status': 'success', 
-        'message': 'Content saved successfully',
-        'document_id': document.id
-    })
+    try:
+        if document_id:
+            # Update existing document
+            document = Document.query.filter_by(id=document_id, user_id=current_user.id).first()
+            if document:
+                document.content = content
+                document.updated_at = datetime.utcnow()
+                db.session.commit()
+                
+                app.logger.info(f"Document updated by user {current_user.id}: {document_id}")
+                return jsonify({
+                    'status': 'success', 
+                    'message': 'Content updated successfully',
+                    'document_id': document.id
+                })
+            else:
+                return jsonify({'status': 'error', 'message': 'Document not found'}), 404
+        else:
+            # Create new document
+            document = Document(
+                user_id=current_user.id,
+                name=f"ESRS Report {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+                content=content
+            )
+            db.session.add(document)
+            db.session.commit()
+            
+            app.logger.info(f"New document created by user {current_user.id}: {document.id}")
+            return jsonify({
+                'status': 'success', 
+                'message': 'Content saved successfully',
+                'document_id': document.id
+            })
+            
+    except Exception as e:
+        app.logger.error(f"Error saving content for user {current_user.id}: {str(e)}")
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': 'Error saving content'}), 500
 
 @app.route('/reset', methods=['POST'])
 def reset_session():
@@ -395,60 +424,48 @@ def reset_session():
     
 @app.route('/chat/load_conversation/<int:conversation_id>', methods=['POST'])
 @login_required
-def load_conversation_into_session(conversation_id):
-    """Load a specific conversation into the current session WITHOUT clearing authentication"""
+def load_conversation(conversation_id):
     try:
+        # Verificar que la conversación pertenece al usuario actual
         conversation = Conversation.query.filter_by(
             id=conversation_id, 
             user_id=current_user.id
         ).first()
         
         if not conversation:
-            return jsonify({'message': 'Conversation not found'}), 404
+            return jsonify({'error': 'Conversation not found'}), 404
         
-        # DON'T clear the entire session - only clear chat-related keys
-        chat_keys = ['initialized', 'company_desc', 'nace_sector', 'esrs_sector', 'conversation_history', 'conversation_id']
-        for key in chat_keys:
-            session.pop(key, None)
-        
-        # Load conversation into session
+        # Guardar información de la conversación en la sesión
+        session.clear()  # Limpiar sesión actual para evitar mezclar datos
+        session['conversation_id'] = conversation.id
         session['initialized'] = True
         session['company_desc'] = conversation.company_description
         session['nace_sector'] = conversation.nace_sector
         session['esrs_sector'] = conversation.esrs_sector
-        session['conversation_id'] = conversation.id
         
-        # Load conversation history
+        # Cargar mensajes de la conversación
         answers = Answer.query.filter_by(conversation_id=conversation_id).order_by(Answer.created_at).all()
-        conversation_history = []
-        
-        # Start with company description
-        conversation_history.append(f"Company description: {conversation.company_description}")
-        conversation_history.append(f"ESRS standards to follow: {'Agnostic Standards' if conversation.esrs_sector == 'Agnostic' else f'Agnostic Standards + {conversation.esrs_sector}'}")
-        
+        messages = []
         for answer in answers:
-            conversation_history.append(f"Q: {answer.question}")
-            conversation_history.append(f"A: {answer.answer}")
+            messages.append({'type': 'user', 'content': answer.question})
+            messages.append({'type': 'bot', 'content': answer.answer})
         
-        session['conversation_history'] = conversation_history
-        session.permanent = True
         session.modified = True
         
         return jsonify({
-            'message': 'Conversation loaded successfully',
+            'success': True,
             'conversation': {
                 'id': conversation.id,
                 'title': conversation.title,
                 'nace_sector': conversation.nace_sector,
                 'esrs_sector': conversation.esrs_sector,
-                'company_description': conversation.company_description
+                'company_description': conversation.company_description,
+                'messages': messages
             }
-        }), 200
-        
+        })
     except Exception as e:
         app.logger.error(f"Error loading conversation: {str(e)}")
-        return jsonify({'message': 'Failed to load conversation'}), 500
-
+        return jsonify({'error': 'Failed to load conversation'}), 500
 
 @app.route('/chat/save_for_later', methods=['POST'])
 def save_conversation_for_later():
@@ -761,7 +778,8 @@ def update_user_profile():
 
 @app.route('/get-csrf-token', methods=['GET'])
 def get_csrf_token():
-    return jsonify({'csrf_token': generate_csrf_token()})
+    token = generate_csrf_token()
+    return jsonify({'csrf_token': token}), 200
 
 
 @app.route('/user/conversations', methods=['GET'])
@@ -822,6 +840,8 @@ def delete_conversation(conversation_id):
     
     if not conversation:
         return jsonify({'message': 'Conversation not found'}), 404
+    
+    Answer.query.filter_by(conversation_id=conversation_id).delete()
     
     db.session.delete(conversation)
     db.session.commit()
@@ -884,26 +904,171 @@ def load_document_for_editing(document_id):
         app.logger.error(f"Error loading document: {str(e)}")
         return jsonify({'error': 'Failed to load document'}), 500
     
-@app.route('/user/document/<int:document_id>', methods=['PUT'])
 @login_required
 def update_document(document_id):
+    """Update a specific document"""
+    if not validate_csrf_token(request.form.get('csrf_token')):
+        app.logger.warning(f"CSRF token validation failed: {request.remote_addr}")
+        return jsonify({'status': 'error', 'message': 'Invalid CSRF token'}), 403
+    
+    document = Document.query.filter_by(id=document_id, user_id=current_user.id).first()
+    
+    if not document:
+        return jsonify({'message': 'Document not found'}), 404
+    
+    content = request.form.get('content', '')
+    name = request.form.get('name')
+    
+    try:
+        document.content = content
+        if name:
+            document.name = name
+        document.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        app.logger.info(f"Document updated by user {current_user.id}: {document_id}")
+        return jsonify({
+            'status': 'success',
+            'message': 'Document updated successfully',
+            'document': {
+                'id': document.id,
+                'name': document.name,
+                'updated_at': document.updated_at.isoformat()
+            }
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error updating document {document_id} for user {current_user.id}: {str(e)}")
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': 'Error updating document'}), 500
+
+@app.route('/user/document/<int:document_id>/rename', methods=['POST'])
+@login_required
+def rename_document(document_id):
+    """Rename a specific document"""
+    if not validate_csrf_token(request.json.get('csrf_token')):
+        app.logger.warning(f"CSRF token validation failed: {request.remote_addr}")
+        return jsonify({'status': 'error', 'message': 'Invalid CSRF token'}), 403
+    
     document = Document.query.filter_by(id=document_id, user_id=current_user.id).first()
     
     if not document:
         return jsonify({'message': 'Document not found'}), 404
     
     data = request.json
+    new_name = data.get('name', '').strip()
     
-    if 'content' in data:
-        document.content = data['content']
-    if 'name' in data:
-        document.name = data['name']
+    if not new_name:
+        return jsonify({'status': 'error', 'message': 'Document name cannot be empty'}), 400
     
-    document.updated_at = datetime.now()
-    db.session.commit()
+    try:
+        document.name = new_name
+        document.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        app.logger.info(f"Document renamed by user {current_user.id}: {document_id} -> {new_name}")
+        return jsonify({
+            'status': 'success',
+            'message': 'Document renamed successfully',
+            'document': {
+                'id': document.id,
+                'name': document.name,
+                'updated_at': document.updated_at.isoformat()
+            }
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error renaming document {document_id} for user {current_user.id}: {str(e)}")
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': 'Error renaming document'}), 500
+
+@app.route('/user/documents/create', methods=['POST'])
+@login_required
+def create_document():
+    """Create a new document"""
+    if not validate_csrf_token(request.json.get('csrf_token')):
+        app.logger.warning(f"CSRF token validation failed: {request.remote_addr}")
+        return jsonify({'status': 'error', 'message': 'Invalid CSRF token'}), 403
     
-    app.logger.info(f"Document updated by user {current_user.id}: {document_id}")
-    return jsonify({'message': 'Document updated successfully'}), 200
+    data = request.json
+    name = data.get('name', f"ESRS Report {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    content = data.get('content', '')
+    
+    try:
+        document = Document(
+            user_id=current_user.id,
+            name=name,
+            content=content
+        )
+        db.session.add(document)
+        db.session.commit()
+        
+        app.logger.info(f"New document created by user {current_user.id}: {document.id}")
+        return jsonify({
+            'status': 'success',
+            'message': 'Document created successfully',
+            'document': {
+                'id': document.id,
+                'name': document.name,
+                'created_at': document.created_at.isoformat(),
+                'updated_at': document.updated_at.isoformat()
+            }
+        }), 201
+        
+    except Exception as e:
+        app.logger.error(f"Error creating document for user {current_user.id}: {str(e)}")
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': 'Error creating document'}), 500
+
+@app.route('/user/documents/autosave', methods=['POST'])
+@login_required
+@limiter.limit("60 per minute") 
+def autosave_document():
+    """Autosave endpoint with reduced validation for frequent saves"""
+    content = request.form.get('content', '')
+    document_id = request.form.get('document_id')
+    
+    if not content.strip():
+        return jsonify({'status': 'error', 'message': 'Cannot save empty content'}), 400
+    
+    try:
+        if document_id:
+            document = Document.query.filter_by(id=document_id, user_id=current_user.id).first()
+            if document:
+                document.content = content
+                document.updated_at = datetime.utcnow()
+                db.session.commit()
+                
+                return jsonify({
+                    'status': 'success',
+                    'message': 'Content autosaved',
+                    'document_id': document.id,
+                    'last_saved': document.updated_at.isoformat()
+                })
+            else:
+                return jsonify({'status': 'error', 'message': 'Document not found'}), 404
+        else:
+            document = Document(
+                user_id=current_user.id,
+                name=f"Draft {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+                content=content
+            )
+            db.session.add(document)
+            db.session.commit()
+            
+            return jsonify({
+                'status': 'success',
+                'message': 'Content autosaved as new document',
+                'document_id': document.id,
+                'last_saved': document.created_at.isoformat()
+            })
+            
+    except Exception as e:
+        app.logger.error(f"Error autosaving content for user {current_user.id}: {str(e)}")
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': 'Error saving content'}), 500
+
 
 
 @app.route('/user/document/<int:document_id>', methods=['DELETE'])

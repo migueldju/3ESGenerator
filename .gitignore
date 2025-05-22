@@ -7,3 +7,7 @@
 /backend/config.py
 
 /backend/config.env
+
+sendgrid.txt
+
+nvapi.txt
