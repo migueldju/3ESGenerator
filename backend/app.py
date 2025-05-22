@@ -198,11 +198,15 @@ def serve(path):
 @limiter.limit("30 per minute")
 def chat():
     user_message = request.form['message']
-    app.logger.info(f"Chat message received. Session data: {dict(session)}")
+    conversation_id = request.form.get('conversation_id')
     
-    conversation_id = session.get('conversation_id')
+    app.logger.info(f"Chat message received. Session initialized: {'initialized' in session}, Conversation ID: {conversation_id}")
+    
+    # If we have a conversation_id but session is not initialized, this might be a page refresh
+    # Don't automatically load - let the frontend handle this explicitly
     
     if 'initialized' not in session:
+        # First message - company description
         company_desc = user_message
         result = process_company_description(company_desc)
         
@@ -210,13 +214,17 @@ def chat():
         session['company_desc'] = company_desc
         session['nace_sector'] = result['nace_sector']
         session['esrs_sector'] = result['esrs_sector']
+        session['conversation_history'] = [
+            f"Company description: {company_desc}",
+            f"ESRS standards to follow: {'Agnostic Standards' if result['esrs_sector'] == 'Agnostic' else f'Agnostic Standards + {result['esrs_sector']}'}"
+        ]
         
-        if not conversation_id:
-            current_user_id = current_user.id if current_user.is_authenticated else None
-            app.logger.info(f"Creating new conversation for user_id: {current_user_id}")
-            
+        session.permanent = True
+        session.modified = True
+        
+        if current_user.is_authenticated:
             conversation = Conversation(
-                user_id=current_user_id,
+                user_id=current_user.id,
                 nace_sector=result['nace_sector'],
                 title="Conversation " + datetime.now().strftime("%Y-%m-%d %H:%M"),
                 esrs_sector=result['esrs_sector'],
@@ -224,95 +232,82 @@ def chat():
             )
             db.session.add(conversation)
             db.session.commit()
-            
             session['conversation_id'] = conversation.id
-            conversation_id = conversation.id
-        
-        if 'conversation_history' not in session:
-            session['conversation_history'] = []
-        
-        session.modified = True
-        
-        answer = Answer(
-            conversation_id=conversation_id,
-            question=user_message,
-            answer=f"Thank you for your company description. Based on my analysis, your company falls under NACE sector {result['nace_sector']}. How can I help you with your ESRS reporting requirements?"
-        )
-        db.session.add(answer)
-        db.session.commit()
         
         return jsonify({
             'answer': f"Thank you for your company description. Based on my analysis, your company falls under NACE sector {result['nace_sector']}. How can I help you with your ESRS reporting requirements?",
             'context': '',
             'is_first_message': True,
             'nace_sector': result['nace_sector'],
-            'esrs_sector': result['esrs_sector']
+            'esrs_sector': result['esrs_sector'],
+            'conversation_id': session.get('conversation_id')
         })
     else:
+        # Continue existing conversation
         response = process_question(user_message)
-        response_data = response.get_json()
         
-        conversation_history = session.get('conversation_history', [])
-        conversation_history.append(f"Q: {user_message}")
-        conversation_history.append(f"A: {response_data['answer']}")
-        session['conversation_history'] = conversation_history
+        # Save the new Q&A to database if conversation exists
+        if current_user.is_authenticated and session.get('conversation_id'):
+            try:
+                response_data = response.get_json()
+                answer_record = Answer(
+                    conversation_id=session['conversation_id'],
+                    question=user_message,
+                    answer=response_data['answer']
+                )
+                db.session.add(answer_record)
+                
+                # Update conversation timestamp
+                conversation = Conversation.query.get(session['conversation_id'])
+                if conversation:
+                    conversation.updated_at = datetime.utcnow()
+                
+                db.session.commit()
+            except Exception as e:
+                app.logger.error(f"Error saving answer to database: {str(e)}")
+                db.session.rollback()
+        
         session.modified = True
-        
-        if conversation_id:
-            answer = Answer(
-                conversation_id=conversation_id,
-                question=user_message,
-                answer=response_data['answer']
-            )
-            db.session.add(answer)
-            db.session.commit()
-        
-        return response
+        response_data = response.get_json()
+        response_data['conversation_id'] = session.get('conversation_id')
+        return jsonify(response_data)
+
 
 
 @app.route('/chat/get_conversation', methods=['GET'])
-def get_conversation():
-    app.logger.info("Getting conversation")
-    
-    if 'initialized' not in session:
-        return jsonify({
-            'initialized': False,
-            'nace_sector': 'Not classified yet',
-            'esrs_sector': 'Not determined yet',
-            'messages': []
-        })
-    
-    messages = []
-    conversation_id = session.get('conversation_id')
-    
-    if conversation_id:
-        conversation = Conversation.query.filter_by(id=conversation_id).first()
-        if conversation:
-            answers = Answer.query.filter_by(conversation_id=conversation_id).order_by(Answer.created_at).all()
-            for answer in answers:
-                messages.append({'type': 'user', 'content': answer.question})
-                messages.append({'type': 'bot', 'content': answer.answer})
-    else:
+def get_current_conversation():
+    """Get the current session conversation"""
+    if 'initialized' in session:
+        response_data = {
+            'initialized': True,
+            'nace_sector': session.get('nace_sector', ''),
+            'esrs_sector': session.get('esrs_sector', ''),
+            'company_desc': session.get('company_desc', ''),
+            'conversation_id': session.get('conversation_id')
+        }
+        
+        # If there's conversation history, convert it to messages format
         conversation_history = session.get('conversation_history', [])
-        for i in range(0, len(conversation_history), 2):
-            if i < len(conversation_history) and conversation_history[i].startswith('Q: '):
-                messages.append({
-                    'type': 'user', 
-                    'content': conversation_history[i][3:]
-                })
-            if i + 1 < len(conversation_history) and conversation_history[i+1].startswith('A: '):
-                messages.append({
-                    'type': 'bot', 
-                    'content': conversation_history[i+1][3:]
-                })
+        if conversation_history and len(conversation_history) > 2:
+            messages = [{
+                'type': 'bot',
+                'content': f'<h2>Welcome back to ESGenerator</h2><p>Company: {session.get("company_desc", "")}</p><p>NACE Sector: {session.get("nace_sector", "")}</p><p>ESRS Standards: {session.get("esrs_sector", "")}</p>',
+                'isWelcome': True
+            }]
+            
+            # Skip the first two items (company description and ESRS standards)
+            for i in range(2, len(conversation_history), 2):
+                if i + 1 < len(conversation_history):
+                    question = conversation_history[i].replace('Q: ', '')
+                    answer = conversation_history[i + 1].replace('A: ', '')
+                    messages.append({'type': 'user', 'content': question})
+                    messages.append({'type': 'bot', 'content': answer})
+            
+            response_data['messages'] = messages
+        
+        return jsonify(response_data)
     
-    return jsonify({
-        'initialized': True,
-        'nace_sector': session.get('nace_sector', ''),
-        'esrs_sector': session.get('esrs_sector', ''),
-        'messages': messages,
-        'company_desc': session.get('company_desc', '')
-    })
+    return jsonify({'initialized': False})
 
 @app.route('/chat/debug/conversation', methods=['GET'])
 def debug_conversation():
@@ -400,48 +395,60 @@ def reset_session():
     
 @app.route('/chat/load_conversation/<int:conversation_id>', methods=['POST'])
 @login_required
-def load_conversation(conversation_id):
+def load_conversation_into_session(conversation_id):
+    """Load a specific conversation into the current session WITHOUT clearing authentication"""
     try:
-        # Verificar que la conversación pertenece al usuario actual
         conversation = Conversation.query.filter_by(
             id=conversation_id, 
             user_id=current_user.id
         ).first()
         
         if not conversation:
-            return jsonify({'error': 'Conversation not found'}), 404
+            return jsonify({'message': 'Conversation not found'}), 404
         
-        # Guardar información de la conversación en la sesión
-        session.clear()  # Limpiar sesión actual para evitar mezclar datos
-        session['conversation_id'] = conversation.id
+        # DON'T clear the entire session - only clear chat-related keys
+        chat_keys = ['initialized', 'company_desc', 'nace_sector', 'esrs_sector', 'conversation_history', 'conversation_id']
+        for key in chat_keys:
+            session.pop(key, None)
+        
+        # Load conversation into session
         session['initialized'] = True
         session['company_desc'] = conversation.company_description
         session['nace_sector'] = conversation.nace_sector
         session['esrs_sector'] = conversation.esrs_sector
+        session['conversation_id'] = conversation.id
         
-        # Cargar mensajes de la conversación
+        # Load conversation history
         answers = Answer.query.filter_by(conversation_id=conversation_id).order_by(Answer.created_at).all()
-        messages = []
-        for answer in answers:
-            messages.append({'type': 'user', 'content': answer.question})
-            messages.append({'type': 'bot', 'content': answer.answer})
+        conversation_history = []
         
+        # Start with company description
+        conversation_history.append(f"Company description: {conversation.company_description}")
+        conversation_history.append(f"ESRS standards to follow: {'Agnostic Standards' if conversation.esrs_sector == 'Agnostic' else f'Agnostic Standards + {conversation.esrs_sector}'}")
+        
+        for answer in answers:
+            conversation_history.append(f"Q: {answer.question}")
+            conversation_history.append(f"A: {answer.answer}")
+        
+        session['conversation_history'] = conversation_history
+        session.permanent = True
         session.modified = True
         
         return jsonify({
-            'success': True,
+            'message': 'Conversation loaded successfully',
             'conversation': {
                 'id': conversation.id,
                 'title': conversation.title,
                 'nace_sector': conversation.nace_sector,
                 'esrs_sector': conversation.esrs_sector,
-                'company_description': conversation.company_description,
-                'messages': messages
+                'company_description': conversation.company_description
             }
-        })
+        }), 200
+        
     except Exception as e:
         app.logger.error(f"Error loading conversation: {str(e)}")
-        return jsonify({'error': 'Failed to load conversation'}), 500
+        return jsonify({'message': 'Failed to load conversation'}), 500
+
 
 @app.route('/chat/save_for_later', methods=['POST'])
 def save_conversation_for_later():
@@ -815,8 +822,6 @@ def delete_conversation(conversation_id):
     
     if not conversation:
         return jsonify({'message': 'Conversation not found'}), 404
-    
-    Answer.query.filter_by(conversation_id=conversation_id).delete()
     
     db.session.delete(conversation)
     db.session.commit()

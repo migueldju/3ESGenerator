@@ -1,3 +1,5 @@
+// frontend/src/components/MyContentPage.jsx
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -44,9 +46,9 @@ const MyContentPage = () => {
     setError(null);
     
     try {
-      if (activeTab === 'conversations') {
-        await fetchConversations();
-      } else if (activeTab === 'documents') {
+      await fetchConversations();
+      
+      if (activeTab === 'documents') {
         await fetchDocuments();
       }
     } catch (error) {
@@ -68,7 +70,37 @@ const MyContentPage = () => {
       }
       
       const data = await response.json();
-      setConversations(data);
+      
+      const processedData = [];
+      
+      for (const conversation of data) {
+        const createdDate = new Date(conversation.created_at);
+        const day = String(createdDate.getDate()).padStart(2, '0');
+        const month = String(createdDate.getMonth() + 1).padStart(2, '0');
+        const year = createdDate.getFullYear();
+        const hours = String(createdDate.getHours()).padStart(2, '0');
+        const minutes = String(createdDate.getMinutes()).padStart(2, '0');
+        
+        conversation.displayTitle = conversation.title || `Conversation ${day}-${month}-${year} ${hours}:${minutes}`;
+        
+        try {
+          const detailsResponse = await fetch(`/api/user/conversation/${conversation.id}`, {
+            credentials: 'include'
+          });
+          
+          if (detailsResponse.ok) {
+            const details = await detailsResponse.json();
+            conversation.answerCount = details.answers ? Math.floor(details.answers.length / 2) : 0;
+          }
+        } catch (error) {
+          console.error(`Error fetching details for conversation ${conversation.id}:`, error);
+          conversation.answerCount = 0;
+        }
+        
+        processedData.push(conversation);
+      }
+      
+      setConversations(processedData);
     } catch (error) {
       console.error('Error fetching conversations:', error);
       throw error;
@@ -96,16 +128,7 @@ const MyContentPage = () => {
   const handleTabChange = async (tab) => {
     setActiveTab(tab);
     
-    if (tab === 'conversations' && conversations.length === 0) {
-      try {
-        setIsLoading(true);
-        await fetchConversations();
-      } catch (error) {
-        setError('Failed to load conversations. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    } else if (tab === 'documents' && documents.length === 0) {
+    if (tab === 'documents' && documents.length === 0) {
       try {
         setIsLoading(true);
         await fetchDocuments();
@@ -118,41 +141,22 @@ const MyContentPage = () => {
   };
 
   const handleLoadConversation = async (id) => {
-  try {
-    setIsLoading(true);
-    const response = await fetch(`/api/chat/load_conversation/${id}`, {
-      method: 'POST',
-      credentials: 'include'
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to load conversation');
-    }
-    
-    const data = await response.json();
-    
-    // Verificar explícitamente que hay mensajes en la respuesta
-    if (data.success) {
-      console.log("Conversation loaded successfully. Messages:", 
-        data.conversation.messages ? data.conversation.messages.length : 0);
+    try {
+      const response = await fetch(`/api/chat/load_conversation/${id}`, {
+        method: 'POST',
+        credentials: 'include'
+      });
       
-      // Guardar en localStorage un indicador de que se acaba de cargar una conversación
-      // para que chatView sepa que debe forzar una recarga
-      localStorage.setItem('just_loaded_conversation', 'true');
-      localStorage.setItem('loaded_conversation_id', id.toString());
-      localStorage.setItem('loaded_conversation_timestamp', Date.now().toString());
+      if (!response.ok) {
+        throw new Error('Failed to load conversation');
+      }
       
-      // Navegar a la página principal
       navigate('/');
-    } else {
-      throw new Error(data.error || 'Failed to load conversation');
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+      setError('Failed to load conversation. Please try again.');
     }
-  } catch (error) {
-    console.error('Error loading conversation:', error);
-    setError('Failed to load conversation. Please try again.');
-    setIsLoading(false);
-  }
-};
+  };
 
   const handleLoadDocument = (id) => {
     navigate(`/editor?document=${id}`);
@@ -173,9 +177,7 @@ const MyContentPage = () => {
     setIsDeleting(true);
     
     try {
-      const endpoint = type === 'conversation' ? `/api/user/conversation/${id}` : `/api/user/document/${id}`;
-      
-      const response = await fetch(endpoint, {
+      const response = await fetch(`/api/user/${type}/${id}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -199,9 +201,21 @@ const MyContentPage = () => {
     }
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const getCompanyDescription = (conversation) => {
+    if (!conversation) return '';
+    
+    if (conversation.company_description && typeof conversation.company_description === 'string') {
+      const desc = conversation.company_description.trim();
+      if (desc.length === 0) return 'No description available';
+      
+      return desc.length > 150 ? desc.substring(0, 150).trim() + '...' : desc;
+    }
+    
+    return 'No description available';
+  };
+
+  const handleNavigation = (path) => {
+    navigate(path);
   };
 
   return (
@@ -212,13 +226,13 @@ const MyContentPage = () => {
           <div className="nav-container">
             <button 
               className="nav-button inactive" 
-              onClick={() => navigate('/')}
+              onClick={() => handleNavigation('/')}
             >
               Chat
             </button>
             <button 
               className="nav-button inactive" 
-              onClick={() => navigate('/editor')}
+              onClick={() => handleNavigation('/editor')}
             >
               Editor
             </button>
@@ -266,17 +280,15 @@ const MyContentPage = () => {
                         {conversations.map(conversation => (
                           <div key={conversation.id} className="item-card">
                             <div className="item-info">
-                              <h3>{conversation.title || `Conversation ${formatDate(conversation.created_at)}`}</h3>
+                              <h3>{conversation.displayTitle}</h3>
                               <div className="item-details">
                                 <div className="company-description-container">
                                   <span className="detail-label">Company description:</span>
-                                  <span className="detail-content">{conversation.company_description || 'No description available'}</span>
+                                  <span className="detail-content">{getCompanyDescription(conversation)}</span>
                                 </div>
                                 <div className="additional-details">
                                   <span className="detail">NACE Sector: {conversation.nace_sector || 'Not specified'}</span>
-                                  <span className="detail">ESRS Sector: {conversation.esrs_sector || 'Not specified'}</span>
-                                  <span className="detail">Messages: {conversation.answer_count || 0}</span>
-                                  <span className="detail">Created: {formatDate(conversation.created_at)}</span>
+                                  <span className="detail">Answers: {conversation.answerCount || 0}</span>
                                 </div>
                               </div>
                             </div>
@@ -317,7 +329,7 @@ const MyContentPage = () => {
                             <div className="item-info">
                               <h3>{document.name}</h3>
                               <div className="item-details">
-                                <span className="detail">Created: {formatDate(document.created_at)}</span>
+                                <span className="detail">Created: {new Date(document.created_at).toLocaleDateString()}</span>
                               </div>
                             </div>
                             <div className="item-actions">
